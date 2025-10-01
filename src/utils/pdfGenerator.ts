@@ -309,10 +309,98 @@ export function generatePDFContent(
             font-size: 12px;
         }
         
-        @media print {
+        /* Mobile-specific styles */
+        @media screen and (max-width: 768px) {
             body {
-                padding: 0;
-                font-size: 12px;
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .transactions-table {
+                font-size: 11px;
+            }
+            
+            .transaction-type {
+                font-size: 9px;
+                padding: 3px 6px;
+                min-width: 70px;
+            }
+            
+            .notes {
+                font-size: 10px;
+                max-width: 80px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .header h2 {
+                font-size: 15px;
+            }
+            
+            /* Mobil için tabloyu daha okunabilir hale getir */
+            .transactions-table th,
+            .transactions-table td {
+                padding: 8px 4px;
+            }
+            
+            /* Mobilde tabloyu dikey hale getir */
+            .transactions-table,
+            .transactions-table thead,
+            .transactions-table tbody,
+            .transactions-table th,
+            .transactions-table td,
+            .transactions-table tr {
+                display: block;
+            }
+            
+            .transactions-table thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            
+            .transactions-table tr {
+                border: 1px solid #ccc;
+                margin-bottom: 10px;
+                padding: 10px;
+                border-radius: 8px;
+                background: #f8fafc;
+            }
+            
+            .transactions-table td {
+                border: none;
+                position: relative;
+                padding: 6px 0 6px 30%;
+                text-align: right;
+            }
+            
+            .transactions-table td:before {
+                content: attr(data-label) ": ";
+                position: absolute;
+                left: 0;
+                width: 25%;
+                text-align: left;
+                font-weight: bold;
+                color: #475569;
+            }
+        }
+        
+        /* Small mobile devices */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 5px;
+                font-size: 13px;
+            }
+            
+            .transactions-table th,
+            .transactions-table td {
+                padding: 6px 4px;
             }
             
             .transactions-table {
@@ -320,11 +408,84 @@ export function generatePDFContent(
             }
             
             .transaction-type {
-                font-size: 9px;
+                font-size: 8px;
+                padding: 2px 4px;
+                min-width: 60px;
             }
             
             .notes {
                 font-size: 9px;
+                max-width: 60px;
+            }
+            
+            .transactions-table td {
+                padding: 4px 0 4px 35%;
+            }
+            
+            .transactions-table td:before {
+                width: 30%;
+                font-size: 9px;
+            }
+        }
+        
+        /* Print styles - mobil ve masaüstü için optimize edilmiş */
+        @media print {
+            @page {
+                margin: 0.5cm;
+            }
+            
+            body {
+                padding: 0;
+                font-size: 14px;
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            .transactions-table {
+                font-size: 12px;
+                width: 100%;
+                table-layout: auto;
+            }
+            
+            .transaction-type {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+            
+            .notes {
+                font-size: 10px;
+                max-width: 100px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .header h2 {
+                font-size: 16px;
+            }
+            
+            /* Print için mobil stilleri kaldır */
+            .transactions-table,
+            .transactions-table thead,
+            .transactions-table tbody,
+            .transactions-table th,
+            .transactions-table td,
+            .transactions-table tr {
+                display: table;
+            }
+            
+            .transactions-table thead tr {
+                position: static;
+            }
+            
+            .transactions-table td:before {
+                display: none;
+            }
+            
+            .transactions-table td {
+                padding: 8px;
+                text-align: left;
             }
         }
     </style>
@@ -446,19 +607,19 @@ export function generatePDFContent(
                   
                   return `
                     <tr>
-                        <td>${formatDateTime(transaction.date)}</td>
-                        <td>
+                        <td data-label="Tarih">${formatDateTime(transaction.date)}</td>
+                        <td data-label="İşlem Türü">
                             <span class="transaction-type ${typeClass}">
                                 ${transactionTypeLabels[transaction.type]}
                             </span>
                         </td>
-                        <td>${product ? product.name : '-'}</td>
-                        <td>${transaction.quantity && product ? `${transaction.quantity} ${product.unit}` : '-'}</td>
-                        <td>${transaction.unitPrice ? formatMoney(transaction.unitPrice) : '-'}</td>
-                        <td class="${transaction.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
+                        <td data-label="Ürün">${product ? product.name : '-'}</td>
+                        <td data-label="Miktar">${transaction.quantity && product ? `${transaction.quantity} ${product.unit}` : '-'}</td>
+                        <td data-label="Birim Fiyat">${transaction.unitPrice ? formatMoney(transaction.unitPrice) : '-'}</td>
+                        <td data-label="Toplam" class="${transaction.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
                             ${formatMoney(transaction.amount)}
                         </td>
-                        <td class="notes">${transaction.notes || '-'}</td>
+                        <td data-label="Notlar" class="notes">${transaction.notes || '-'}</td>
                     </tr>
                   `;
                 }).join('')}
