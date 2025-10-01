@@ -22,15 +22,70 @@ export function generatePDFContent(
     .filter(t => t.traderId === trader.id)
     .filter(t => {
       if (!dateRange) return true;
-      const transactionDate = new Date(t.date);
-      const startDate = dateRange.start ? new Date(dateRange.start) : null;
-      const endDate = dateRange.end ? new Date(dateRange.end + 'T23:59:59') : null;
+      
+      // Safe date parsing for transaction date
+      let transactionDate: Date;
+      try {
+        transactionDate = new Date(t.date);
+        if (isNaN(transactionDate.getTime())) {
+          console.warn('Invalid transaction date:', t.date);
+          return false; // Skip invalid dates
+        }
+      } catch (error) {
+        console.warn('Error parsing transaction date:', t.date, error);
+        return false; // Skip invalid dates
+      }
+      
+      let startDate: Date | null = null;
+      let endDate: Date | null = null;
+      
+      if (dateRange.start) {
+        try {
+          startDate = new Date(dateRange.start);
+          if (isNaN(startDate.getTime())) {
+            console.warn('Invalid start date:', dateRange.start);
+            startDate = null;
+          }
+        } catch (error) {
+          console.warn('Error parsing start date:', dateRange.start, error);
+          startDate = null;
+        }
+      }
+      
+      if (dateRange.end) {
+        try {
+          endDate = new Date(dateRange.end + 'T23:59:59');
+          if (isNaN(endDate.getTime())) {
+            console.warn('Invalid end date:', dateRange.end);
+            endDate = null;
+          }
+        } catch (error) {
+          console.warn('Error parsing end date:', dateRange.end, error);
+          endDate = null;
+        }
+      }
       
       if (startDate && transactionDate < startDate) return false;
       if (endDate && transactionDate > endDate) return false;
       return true;
     })
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .sort((a, b) => {
+      // Safe date parsing for sorting
+      try {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        
+        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+          console.warn('Invalid date for sorting:', a.date, b.date);
+          return 0; // Maintain original order for invalid dates
+        }
+        
+        return dateB.getTime() - dateA.getTime();
+      } catch (error) {
+        console.warn('Error sorting transactions by date:', error);
+        return 0; // Maintain original order on error
+      }
+    });
 
   // Calculate balances
   const { moneyBalance, productBalances } = calculateBalances(trader, transactions);

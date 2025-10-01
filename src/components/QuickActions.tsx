@@ -60,6 +60,18 @@ export default function QuickActions({
     
     const transactionType = getTransactionType();
     
+    // Safe date creation
+    let transactionDate: Date;
+    try {
+      transactionDate = new Date();
+      if (isNaN(transactionDate.getTime())) {
+        transactionDate = new Date(); // Fallback to current date
+      }
+    } catch (error) {
+      console.warn('Error creating transaction date:', error);
+      transactionDate = new Date(); // Fallback to current date
+    }
+    
     if (quickAction === 'payment') {
       // Payment transaction - handle different types
       if (needsProduct) {
@@ -72,7 +84,7 @@ export default function QuickActions({
         
         const transactionData: Omit<Transaction, 'id'> = {
           traderId: selectedTrader,
-          date: new Date(),
+          date: transactionDate,
           type: transactionType,
           productType: selectedProductType,
           quantity: parseFloat(quantity),
@@ -88,7 +100,7 @@ export default function QuickActions({
         
         const transactionData: Omit<Transaction, 'id'> = {
           traderId: selectedTrader,
-          date: new Date(),
+          date: transactionDate,
           type: transactionType,
           amount: needsCalculatedAmount ? parseFloat(unitPrice) : 0,
           notes
@@ -104,7 +116,7 @@ export default function QuickActions({
       
       const transactionData: Omit<Transaction, 'id'> = {
         traderId: selectedTrader,
-        date: new Date(),
+        date: transactionDate,
         type: getTransactionType(),
         productType: selectedProductType,
         quantity: parseFloat(quantity),

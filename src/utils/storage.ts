@@ -13,16 +13,27 @@ export function saveToStorage(data: AppData): void {
 
 // Safe date parsing function
 function safeParseDateString(dateString: string | Date): Date {
-  if (dateString instanceof Date) {
-    return isNaN(dateString.getTime()) ? new Date() : dateString;
+  try {
+    if (dateString instanceof Date) {
+      return isNaN(dateString.getTime()) ? new Date() : dateString;
+    }
+    
+    if (typeof dateString === 'string') {
+      // Handle empty or invalid strings
+      if (!dateString || dateString.trim() === '') {
+        return new Date();
+      }
+      
+      const parsed = new Date(dateString);
+      return isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+    
+    // For any other case, return current date
+    return new Date();
+  } catch (error) {
+    console.warn('Error parsing date string:', dateString, error);
+    return new Date(); // Fallback to current date
   }
-  
-  if (typeof dateString === 'string') {
-    const parsed = new Date(dateString);
-    return isNaN(parsed.getTime()) ? new Date() : parsed;
-  }
-  
-  return new Date();
 }
 
 export function loadFromStorage(): AppData {
@@ -30,13 +41,31 @@ export function loadFromStorage(): AppData {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const data = JSON.parse(stored);
-      // Tarihleri Date objesine çevir
-      data.traders.forEach((trader: { lastTransactionDate: string | Date }) => {
-        trader.lastTransactionDate = safeParseDateString(trader.lastTransactionDate);
-      });
-      data.transactions.forEach((transaction: { date: string | Date }) => {
-        transaction.date = safeParseDateString(transaction.date);
-      });
+      
+      // Validate and parse traders with safe date parsing
+      if (data.traders && Array.isArray(data.traders)) {
+        data.traders.forEach((trader: { lastTransactionDate: string | Date }) => {
+          try {
+            trader.lastTransactionDate = safeParseDateString(trader.lastTransactionDate);
+          } catch (error) {
+            console.warn('Error parsing trader lastTransactionDate:', trader, error);
+            trader.lastTransactionDate = new Date(); // Fallback to current date
+          }
+        });
+      }
+      
+      // Validate and parse transactions with safe date parsing
+      if (data.transactions && Array.isArray(data.transactions)) {
+        data.transactions.forEach((transaction: { date: string | Date }) => {
+          try {
+            transaction.date = safeParseDateString(transaction.date);
+          } catch (error) {
+            console.warn('Error parsing transaction date:', transaction, error);
+            transaction.date = new Date(); // Fallback to current date
+          }
+        });
+      }
+      
       return data;
     }
   } catch (error) {
@@ -55,13 +84,36 @@ export function exportToJSON(data: AppData): string {
 }
 
 export function importFromJSON(jsonString: string): AppData {
-  const data = JSON.parse(jsonString);
-  // Tarihleri Date objesine çevir
-  data.traders.forEach((trader: { lastTransactionDate: string | Date }) => {
-    trader.lastTransactionDate = safeParseDateString(trader.lastTransactionDate);
-  });
-  data.transactions.forEach((transaction: { date: string | Date }) => {
-    transaction.date = safeParseDateString(transaction.date);
-  });
-  return data;
+  try {
+    const data = JSON.parse(jsonString);
+    
+    // Validate and parse traders with safe date parsing
+    if (data.traders && Array.isArray(data.traders)) {
+      data.traders.forEach((trader: { lastTransactionDate: string | Date }) => {
+        try {
+          trader.lastTransactionDate = safeParseDateString(trader.lastTransactionDate);
+        } catch (error) {
+          console.warn('Error parsing trader lastTransactionDate:', trader, error);
+          trader.lastTransactionDate = new Date(); // Fallback to current date
+        }
+      });
+    }
+    
+    // Validate and parse transactions with safe date parsing
+    if (data.transactions && Array.isArray(data.transactions)) {
+      data.transactions.forEach((transaction: { date: string | Date }) => {
+        try {
+          transaction.date = safeParseDateString(transaction.date);
+        } catch (error) {
+          console.warn('Error parsing transaction date:', transaction, error);
+          transaction.date = new Date(); // Fallback to current date
+        }
+      });
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('JSON içe aktarılamadı:', error);
+    throw new Error('Geçersiz JSON formatı');
+  }
 }

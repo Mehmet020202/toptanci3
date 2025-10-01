@@ -20,8 +20,26 @@ export default function TransactionForm({
   onCancel,
   selectedTraderId
 }: TransactionFormProps) {
+  // Safe date initialization
+  const getInitialDate = () => {
+    try {
+      if (transaction?.date) {
+        const dateStr = transaction.date.toISOString().slice(0, 16);
+        // Validate the date string
+        const testDate = new Date(dateStr);
+        if (!isNaN(testDate.getTime())) {
+          return dateStr;
+        }
+      }
+      return new Date().toISOString().slice(0, 16);
+    } catch (error) {
+      console.warn('Error initializing date:', error);
+      return new Date().toISOString().slice(0, 16);
+    }
+  };
+
   const [traderId, setTraderId] = useState(transaction?.traderId || selectedTraderId || '');
-  const [date, setDate] = useState(transaction?.date.toISOString().slice(0, 16) || new Date().toISOString().slice(0, 16));
+  const [date, setDate] = useState(getInitialDate());
   const [type, setType] = useState<TransactionType>(transaction?.type || 'mal_alimi');
   const [productType, setProductType] = useState(transaction?.productType || '');
   const [quantity, setQuantity] = useState(transaction?.quantity?.toString() || '');
@@ -91,9 +109,21 @@ export default function TransactionForm({
     // Ürün ile borç işlemlerinde amount kontrolü yok
     if (!traderId || (!amount && needsCalculatedAmount)) return;
 
+    // Safe date creation
+    let transactionDate: Date;
+    try {
+      transactionDate = new Date(); // Her zaman şu anki gerçek tarih ve saat
+      if (isNaN(transactionDate.getTime())) {
+        transactionDate = new Date(); // Fallback to current date
+      }
+    } catch (error) {
+      console.warn('Error creating transaction date:', error);
+      transactionDate = new Date(); // Fallback to current date
+    }
+
     const transactionData: Omit<Transaction, 'id'> = {
       traderId,
-      date: new Date(), // Her zaman şu anki gerçek tarih ve saat
+      date: transactionDate,
       type,
       amount: needsCalculatedAmount ? parseFloat(amount) : 0,
       notes,

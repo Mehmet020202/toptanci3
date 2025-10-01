@@ -36,6 +36,18 @@ export function generateLargeTestDataset(
 
   for (let i = 0; i < traderCount; i++) {
     const name = traderNames[i] || `Test Toptancı ${i + 1}`;
+    // Safe date creation
+    let lastTransactionDate: Date;
+    try {
+      lastTransactionDate = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+      if (isNaN(lastTransactionDate.getTime())) {
+        lastTransactionDate = new Date(); // Fallback to current date
+      }
+    } catch (error) {
+      console.warn('Error creating lastTransactionDate:', error);
+      lastTransactionDate = new Date(); // Fallback to current date
+    }
+    
     traders.push({
       id: `trader_${i + 1}`,
       name,
@@ -43,7 +55,7 @@ export function generateLargeTestDataset(
       notes: `Test notları ${i + 1}`,
       moneyBalance: 0,
       productBalances: {},
-      lastTransactionDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) // Son 30 gün içinde
+      lastTransactionDate
     });
   }
 
@@ -68,16 +80,37 @@ export function generateLargeTestDataset(
     const needsProduct = ['mal_alimi', 'mal_satisi', 'urun_ile_odeme_yapildi', 
                          'urun_ile_odeme_alindi', 'urun_ile_borc_verme', 'urun_ile_borc_alma'].includes(transactionType);
     
+    // Safe date creation
+    let transactionDate: Date;
+    try {
+      transactionDate = new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000);
+      if (isNaN(transactionDate.getTime())) {
+        transactionDate = new Date(); // Fallback to current date
+      }
+    } catch (error) {
+      console.warn('Error creating transaction date:', error);
+      transactionDate = new Date(); // Fallback to current date
+    }
+    
+    // Safe notes creation with date
+    let notes: string;
+    try {
+      notes = `Test işlem ${i + 1} - ${transactionType} - ${new Date().toLocaleDateString('tr-TR')}`;
+    } catch (error) {
+      console.warn('Error creating notes with date:', error);
+      notes = `Test işlem ${i + 1} - ${transactionType}`;
+    }
+    
     transactions.push({
       id: `transaction_${i + 1}`,
       traderId: trader.id,
-      date: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000), // Son 90 gün içinde
+      date: transactionDate,
       type: transactionType,
       productType: needsProduct ? productType.id : undefined,
       quantity: needsProduct ? Math.round(quantity * 1000) / 1000 : undefined,
       unitPrice: needsProduct && ['mal_alimi', 'mal_satisi'].includes(transactionType) ? Math.round(unitPrice * 100) / 100 : undefined,
       amount: Math.round(amount * 100) / 100,
-      notes: `Test işlem ${i + 1} - ${transactionType} - ${new Date().toLocaleDateString('tr-TR')}`
+      notes
     });
   }
 

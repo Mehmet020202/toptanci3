@@ -46,9 +46,21 @@ export default function TraderDetail({
   const traderTransactions = transactions
     .filter(t => t.traderId === trader.id)
     .sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
-      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+      // Safe date parsing for sorting
+      try {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        
+        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+          console.warn('Invalid date for sorting:', a.date, b.date);
+          return 0; // Maintain original order for invalid dates
+        }
+        
+        return sortOrder === 'desc' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
+      } catch (error) {
+        console.warn('Error sorting transactions by date:', error);
+        return 0; // Maintain original order on error
+      }
     });
 
   // Paginate transactions for performance

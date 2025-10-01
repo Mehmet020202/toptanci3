@@ -10,6 +10,34 @@ interface AppData {
   productTypes: ProductType[];
 }
 
+// Helper function to safely parse dates
+function parseDate(dateValue: any): Date {
+  if (!dateValue) return new Date();
+  
+  // If it's already a Date object, return it
+  if (dateValue instanceof Date) return dateValue;
+  
+  // If it's a string, try to parse it
+  if (typeof dateValue === 'string') {
+    const parsed = new Date(dateValue);
+    // Check if the date is valid
+    if (isNaN(parsed.getTime())) {
+      console.warn('Invalid date string:', dateValue);
+      return new Date(); // Return current date as fallback
+    }
+    return parsed;
+  }
+  
+  // If it's a number (timestamp), convert it to Date
+  if (typeof dateValue === 'number') {
+    return new Date(dateValue);
+  }
+  
+  // For any other case, return current date
+  console.warn('Unknown date format:', dateValue);
+  return new Date();
+}
+
 export function useFirebaseData() {
   const { user } = useAuth();
   const [data, setData] = useState<AppData>({
@@ -34,26 +62,59 @@ export function useFirebaseData() {
         const data = snapshot.val();
         
         if (data) {
+          // Parse traders with safe date parsing
+          const traders = Object.values(data.traders || {}).map((trader: any) => {
+            // Safe date parsing for lastTransactionDate
+            let lastTransactionDate: Date;
+            try {
+              lastTransactionDate = parseDate(trader.lastTransactionDate);
+              if (isNaN(lastTransactionDate.getTime())) {
+                console.warn('Invalid lastTransactionDate for trader:', trader.id, trader.lastTransactionDate);
+                lastTransactionDate = new Date(); // Fallback to current date
+              }
+            } catch (error) {
+              console.warn('Error parsing lastTransactionDate for trader:', trader.id, error);
+              lastTransactionDate = new Date(); // Fallback to current date
+            }
+            
+            return {
+              ...trader,
+              lastTransactionDate
+            };
+          });
+          
+          // Parse transactions with safe date parsing
+          const transactions = Object.values(data.transactions || {}).map((transaction: any) => {
+            // Safe date parsing for transaction date
+            let date: Date;
+            try {
+              date = parseDate(transaction.date);
+              if (isNaN(date.getTime())) {
+                console.warn('Invalid date for transaction:', transaction.id, transaction.date);
+                date = new Date(); // Fallback to current date
+              }
+            } catch (error) {
+              console.warn('Error parsing date for transaction:', transaction.id, error);
+              date = new Date(); // Fallback to current date
+            }
+            
+            return {
+              ...transaction,
+              date
+            };
+          });
+          
           setData({
-            traders: Object.values(data.traders || {}),
-            transactions: Object.values(data.transactions || {}),
+            traders,
+            transactions,
             productTypes: Object.values(data.productTypes || {})
           });
         } else {
           // Varsayılan ürün türlerini ekle
           const defaultProductTypes: ProductType[] = [
-            {
-              id: 'altin',
-              name: 'Altın',
-              unit: 'gram' as const,
-              currentPrice: 2500
-            },
-            {
-              id: 'hurda',
-              name: 'Hurda',
-              unit: 'gram' as const,
-              currentPrice: 2300
-            }
+            { id: 'altın', name: 'Altın', unit: 'gram', currentPrice: 1850 },
+            { id: 'gümüş', name: 'Gümüş', unit: 'gram', currentPrice: 25 },
+            { id: 'çeyrek', name: 'Çeyrek Altın', unit: 'adet', currentPrice: 4800 }
           ];
           
           setData({
@@ -61,23 +122,22 @@ export function useFirebaseData() {
             transactions: [],
             productTypes: defaultProductTypes
           });
-          
-          // Varsayılan ürün türlerini kaydet
-          saveProductTypes(defaultProductTypes);
         }
-        
-        setError(null);
       } catch (err) {
-        setError('Veriler yüklenirken hata oluştu.');
-        console.error('Firebase data error:', err);
+        console.error('Veri yüklenirken hata oluştu:', err);
+        setError('Veriler yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
       } finally {
         setLoading(false);
       }
+    }, (error) => {
+      console.error('Firebase veri hatası:', error);
+      setError('Veriler yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.');
+      setLoading(false);
     });
 
+    // Cleanup function
     return () => {
-      off(userDataRef);
-      unsubscribe();
+      off(userDataRef, 'value', unsubscribe);
     };
   }, [user]);
 

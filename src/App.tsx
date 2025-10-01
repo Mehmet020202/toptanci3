@@ -15,7 +15,15 @@ import ReportPage from './components/ReportPage';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Generate ID function
-const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9);
+const generateId = () => {
+  try {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  } catch (error) {
+    console.error('Error generating ID:', error);
+    // Fallback ID generation
+    return 'id_' + Math.random().toString(36).substr(2, 12);
+  }
+};
 
 export default function App() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -71,12 +79,24 @@ export default function App() {
 
   // Event handlers with Firebase integration
   const handleAddTrader = async (traderData: Omit<Trader, 'id' | 'moneyBalance' | 'productBalances' | 'lastTransactionDate'>) => {
+    // Safe date creation
+    let lastTransactionDate: Date;
+    try {
+      lastTransactionDate = new Date();
+      if (isNaN(lastTransactionDate.getTime())) {
+        lastTransactionDate = new Date(); // Fallback to current date
+      }
+    } catch (error) {
+      console.warn('Error creating lastTransactionDate:', error);
+      lastTransactionDate = new Date(); // Fallback to current date
+    }
+
     const newTrader: Trader = {
       ...traderData,
       id: generateId(),
       moneyBalance: 0,
       productBalances: {},
-      lastTransactionDate: new Date()
+      lastTransactionDate
     };
 
     try {
@@ -226,10 +246,22 @@ Devam etmek istiyor musunuz?`;
   }) => {
     if (!selectedTrader) return;
 
+    // Safe date creation
+    let transactionDate: Date;
+    try {
+      transactionDate = new Date();
+      if (isNaN(transactionDate.getTime())) {
+        transactionDate = new Date(); // Fallback to current date
+      }
+    } catch (error) {
+      console.warn('Error creating transaction date:', error);
+      transactionDate = new Date(); // Fallback to current date
+    }
+
     const debtReductionTransaction: Transaction = {
       id: generateId(),
       traderId: selectedTrader.id,
-      date: new Date(),
+      date: transactionDate,
       type: 'urun_ile_odeme_yapildi', // Ürün ile ödeme yaptık - borcumuz azaldı
       productType: conversionData.debtProductId,
       quantity: conversionData.debtAmount,
@@ -240,7 +272,7 @@ Devam etmek istiyor musunuz?`;
     const receivableReductionTransaction: Transaction = {
       id: generateId(),
       traderId: selectedTrader.id,
-      date: new Date(),
+      date: transactionDate,
       type: 'urun_ile_odeme_alindi', // Ürün ile ödeme aldık - alacağımız azaldı
       productType: conversionData.receivableProductId,
       quantity: conversionData.receivableAmount,

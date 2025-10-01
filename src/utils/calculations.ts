@@ -99,19 +99,41 @@ export function formatMoney(amount: number): string {
 }
 
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('tr-TR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(date);
+  // Safe date formatting
+  try {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      console.warn('Invalid date for formatting:', date);
+      return new Date().toLocaleDateString('tr-TR');
+    }
+    
+    return new Intl.DateTimeFormat('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  } catch (error) {
+    console.warn('Error formatting date:', date, error);
+    return new Date().toLocaleDateString('tr-TR'); // Fallback to current date
+  }
 }
 
 export function formatDateTime(date: Date): string {
-  return new Intl.DateTimeFormat('tr-TR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
+  // Safe date-time formatting
+  try {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      console.warn('Invalid date for formatting:', date);
+      return new Date().toLocaleString('tr-TR');
+    }
+    
+    return new Intl.DateTimeFormat('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  } catch (error) {
+    console.warn('Error formatting date time:', date, error);
+    return new Date().toLocaleString('tr-TR'); // Fallback to current date
+  }
 }

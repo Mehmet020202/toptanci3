@@ -22,6 +22,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const database = getDatabase(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Google Provider ayarları - popup tabanlı kimlik doğrulama için
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 export const analytics = getAnalytics(app);
 
 export default app;
