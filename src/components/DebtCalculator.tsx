@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Calculator, ShoppingCart, Scale, Wrench } from 'lucide-react';
 import { Trader, ProductType } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface DebtCalculatorProps {
   trader: Trader;
@@ -20,6 +21,7 @@ export default function DebtCalculator({
   onClose,
   onConvert
 }: DebtCalculatorProps) {
+  const { currentTheme } = useTheme();
   const [debtProductId, setDebtProductId] = useState<string>('');
   const [debtAmount, setDebtAmount] = useState<string>('');
   const [multiplier, setMultiplier] = useState<string>('1.0000');
@@ -75,7 +77,7 @@ export default function DebtCalculator({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: currentTheme.primary }}>
               <Calculator className="w-4 h-4 text-white" />
             </div>
             <h2 className="text-xl font-semibold text-gray-800">
@@ -184,13 +186,13 @@ export default function DebtCalculator({
 
           {/* Hesaplama Özeti */}
           {debtAmount && multiplier && calculatedReceivable && debtProduct && receivableProduct && (
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <h3 className="font-medium text-blue-800 mb-2">Hesaplama Özeti</h3>
-              <div className="text-sm text-blue-700 space-y-1">
+            <div className="rounded-lg p-4 border" style={{ backgroundColor: currentTheme.primaryLight, borderColor: `${currentTheme.primary}40` }}>
+              <h3 className="font-medium mb-2" style={{ color: currentTheme.primary }}>Hesaplama Özeti</h3>
+              <div className="text-sm" style={{ color: `${currentTheme.primary}CC` }}>
                 <div>
                   {debtAmount} {debtProduct.unit} {debtProduct.name} × {multiplier} = {calculatedReceivable} {receivableProduct.unit} {receivableProduct.name}
                 </div>
-                <div className="text-xs text-blue-600 mt-2">
+                <div className="text-xs mt-2" style={{ color: `${currentTheme.primary}AA` }}>
                   Bu işlem sonrasında:<br/>
                   • {debtProduct.name} borcunuzdan {debtAmount} {debtProduct.unit} azalacak<br/>
                   • {receivableProduct.name} alacağınızdan {calculatedReceivable} {receivableProduct.unit} azalacak
@@ -203,8 +205,9 @@ export default function DebtCalculator({
           <div className="flex space-x-3 pt-4">
             <button
               onClick={handleCalculate}
-              className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors"
+              className="flex-1 flex items-center justify-center space-x-2 text-white py-3 px-4 rounded-md transition-colors"
               disabled={!debtAmount || !multiplier || !calculatedReceivable || !debtProductId || !receivableProductId}
+              style={{ backgroundColor: currentTheme.primary }}
             >
               <Calculator className="w-4 h-4" />
               <span>Dönüştür</span>

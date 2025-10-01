@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Edit, Trash2, Plus, Package, ArrowLeft, ChevronUp, ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { ProductType } from '../types';
+import { useResponsive } from '../hooks/usePerformanceOptimization';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ProductTypeManagementProps {
   productTypes: ProductType[];
@@ -19,6 +21,8 @@ export default function ProductTypeManagement({
   onBack,
   onReorder
 }: ProductTypeManagementProps) {
+  const { isMobile, isTouchDevice } = useResponsive();
+  const { currentTheme } = useTheme();
   const [sortConfig, setSortConfig] = useState<{key: keyof ProductType; direction: 'asc' | 'desc'} | null>(null);
   const [localProductTypes, setLocalProductTypes] = useState<ProductType[]>([]);
 
@@ -120,6 +124,10 @@ export default function ProductTypeManagement({
     }
   };
 
+  const handleDelete = (productType: ProductType) => {
+    onDelete(productType.id);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -129,13 +137,14 @@ export default function ProductTypeManagement({
             <div className="flex items-center space-x-4">
               <button
                 onClick={onBack}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className={`flex items-center space-x-2 transition-colors ${isTouchDevice ? 'p-2 rounded-md' : ''}`}
+                style={{ color: currentTheme.primary }}
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span>Geri</span>
               </button>
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Package className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: currentTheme.primaryLight }}>
+                <Package className="w-6 h-6" style={{ color: currentTheme.primary }} />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">Ürün Türleri</h1>
@@ -144,9 +153,10 @@ export default function ProductTypeManagement({
             </div>
             <button
               onClick={onAdd}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 text-white px-4 py-2 rounded-md transition-colors font-medium"
+              style={{ backgroundColor: currentTheme.primary }}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
               <span>Yeni Ürün Türü</span>
             </button>
           </div>
@@ -156,8 +166,8 @@ export default function ProductTypeManagement({
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {sortedProductTypes.length === 0 ? (
             <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: currentTheme.primaryLight }}>
+                <Package className="w-8 h-8" style={{ color: currentTheme.primary }} />
               </div>
               <h3 className="text-lg font-medium text-gray-800 mb-2">
                 Henüz ürün türü eklenmemiş
@@ -167,7 +177,8 @@ export default function ProductTypeManagement({
               </p>
               <button
                 onClick={onAdd}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors mx-auto"
+                className="flex items-center space-x-2 text-white px-4 py-2 rounded-md transition-colors mx-auto"
+                style={{ backgroundColor: currentTheme.primary }}
               >
                 <Plus className="w-4 h-4" />
                 <span>İlk Ürün Türünü Ekle</span>
@@ -242,7 +253,7 @@ export default function ProductTypeManagement({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: currentTheme.primaryLight, color: currentTheme.primary }}>
                           {productType.unit}
                         </span>
                       </td>
@@ -258,17 +269,17 @@ export default function ProductTypeManagement({
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => onEdit(productType)}
-                            className="text-blue-600 hover:text-blue-800 transition-colors"
-                            title="Düzenle"
+                            className="p-2 transition-colors"
+                            style={{ color: currentTheme.primary }}
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => onDelete(productType.id)}
-                            className="text-red-600 hover:text-red-800 transition-colors"
-                            title="Sil"
+                            onClick={() => handleDelete(productType)}
+                            className="p-2 transition-colors"
+                            style={{ color: currentTheme.negative }}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-5 h-5" />
                           </button>
                         </div>
                       </td>
@@ -281,16 +292,16 @@ export default function ProductTypeManagement({
         </div>
 
         {/* Info Box */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mt-6 border rounded-lg p-4" style={{ backgroundColor: currentTheme.primaryLight, borderColor: `${currentTheme.primary}40` }}>
           <div className="flex">
             <div className="flex-shrink-0">
-              <Package className="h-5 w-5 text-blue-400" />
+              <Package className="h-5 w-5" style={{ color: currentTheme.primary }} />
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">
+              <h3 className="text-sm font-medium" style={{ color: currentTheme.primary }}>
                 Ürün Türleri Hakkında
               </h3>
-              <div className="mt-2 text-sm text-blue-700">
+              <div className="mt-2 text-sm" style={{ color: `${currentTheme.primary}CC` }}>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Ürün türleri mal alımı ve satışı işlemlerinde kullanılır</li>
                   <li>Güncel fiyat, mal alımı/satışı işlemlerinde varsayılan birim fiyat olarak kullanılır</li>

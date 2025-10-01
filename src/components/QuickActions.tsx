@@ -4,6 +4,7 @@ import { Trader, Transaction, ProductType, TransactionType } from '../types';
 import { formatMoney } from '../utils/calculations';
 import { transactionTypeLabels } from '../data/defaultData';
 import { useResponsive } from '../hooks/usePerformanceOptimization';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface QuickActionsProps {
   traders: Trader[];
@@ -19,6 +20,7 @@ export default function QuickActions({
   onSaveTransaction
 }: QuickActionsProps) {
   const { isMobile, isTablet, isTouchDevice } = useResponsive();
+  const { currentTheme } = useTheme();
   
   const [selectedTrader, setSelectedTrader] = useState<string>('');
   const [selectedProductType, setSelectedProductType] = useState<string>('');
@@ -164,7 +166,7 @@ export default function QuickActions({
     <div className={`bg-white rounded-lg shadow-md ${isMobile ? 'p-4' : 'p-6'} mb-4`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-gray-900 flex items-center leading-tight`}>
-          <Zap className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} mr-2 text-blue-600`} />
+          <Zap className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} mr-2`} style={{ color: currentTheme.primary }} />
           Hızlı İşlemler
         </h2>
         {isMobile && (
@@ -195,6 +197,10 @@ export default function QuickActions({
                   className={`flex ${isMobile ? 'flex-col items-center' : 'items-center justify-center'} space-${isMobile ? 'y' : 'x'}-2 ${isMobile ? 'py-3 px-2' : 'py-3 px-4'} rounded-lg text-white font-semibold transition-all ${
                     isActive ? action.activeColor : action.color
                   } ${isTouchDevice ? 'active:scale-95' : 'hover:scale-105'} leading-tight`}
+                  style={{ 
+                    backgroundColor: isActive ? currentTheme.primary : currentTheme.primaryDark,
+                    ...(isActive ? {} : { filter: 'brightness(0.9)' })
+                  }}
                 >
                   <Icon className={`${isMobile ? 'w-5 h-5' : 'w-5 h-5'}`} />
                   <span className={`${isMobile ? 'text-xs' : 'text-sm'} ${isMobile ? 'text-center' : ''} font-semibold leading-tight`}>{action.label}</span>
@@ -325,10 +331,10 @@ export default function QuickActions({
 
           {/* Calculated Total */}
           {quickAction !== 'payment' && quantity && unitPrice && needsCalculatedAmount && (
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <div className="rounded-lg p-4 border" style={{ backgroundColor: currentTheme.primaryLight, borderColor: `${currentTheme.primary}40` }}>
               <div className="text-center">
                 <span className="text-sm text-gray-600">Hesaplanan Toplam: </span>
-                <span className="font-bold text-lg text-blue-600">
+                <span className="font-bold text-lg" style={{ color: currentTheme.primary }}>
                   {formatMoney(parseFloat(quantity) * parseFloat(unitPrice))}
                 </span>
               </div>
@@ -337,10 +343,10 @@ export default function QuickActions({
 
           {/* Calculated Total for Payment with Product and Unit Price */}
           {quickAction === 'payment' && needsProduct && needsUnitPrice && quantity && unitPrice && needsCalculatedAmount && (
-            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+            <div className="rounded-lg p-4 border" style={{ backgroundColor: currentTheme.primaryLight, borderColor: `${currentTheme.primary}40` }}>
               <div className="text-center">
                 <span className="text-sm text-gray-600">Hesaplanan Toplam: </span>
-                <span className="font-bold text-lg text-purple-600">
+                <span className="font-bold text-lg" style={{ color: currentTheme.primary }}>
                   {formatMoney(parseFloat(quantity) * parseFloat(unitPrice))}
                 </span>
               </div>
@@ -349,7 +355,8 @@ export default function QuickActions({
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 transition-colors"
+            className="w-full flex items-center justify-center space-x-2 text-white py-3 px-4 rounded-md font-medium transition-colors"
+            style={{ backgroundColor: currentTheme.primary }}
           >
             <Save className="w-5 h-5" />
             <span>

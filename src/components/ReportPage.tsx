@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, Package, DollarSign, Trash2, AlertTriangle, P
 import { Trader, Transaction, ProductType } from '../types';
 import { calculateBalances, formatMoney } from '../utils/calculations';
 import { useResponsive } from '../hooks/usePerformanceOptimization';
+import { useTheme, themes } from '../contexts/ThemeContext';
 
 interface ReportPageProps {
   traders: Trader[];
@@ -11,87 +12,9 @@ interface ReportPageProps {
   onDeleteTrader: (traderId: string) => void;
 }
 
-// Tema tanımlamaları
-const themes = {
-  default: {
-    name: 'Varsayılan',
-    primary: '#3b82f6', // blue-500
-    primaryLight: '#dbeafe', // blue-100
-    primaryDark: '#2563eb', // blue-600
-    secondary: '#10b981', // emerald-500
-    secondaryLight: '#d1fae5', // emerald-100
-    secondaryDark: '#059669', // emerald-600
-    accent: '#8b5cf6', // violet-500
-    accentLight: '#ede9fe', // violet-100
-    accentDark: '#7c3aed', // violet-600
-    positive: '#10b981', // emerald-500
-    positiveLight: '#d1fae5', // emerald-100
-    positiveDark: '#059669', // emerald-600
-    negative: '#ef4444', // red-500
-    negativeLight: '#fee2e2', // red-100
-    negativeDark: '#dc2626', // red-600
-  },
-  dark: {
-    name: 'Koyu',
-    primary: '#6b7280', // gray-500
-    primaryLight: '#1f2937', // gray-800
-    primaryDark: '#111827', // gray-900
-    secondary: '#3b82f6', // blue-500
-    secondaryLight: '#1e3a8a', // blue-800
-    secondaryDark: '#1e40af', // blue-900
-    accent: '#8b5cf6', // violet-500
-    accentLight: '#5b21b6', // violet-800
-    accentDark: '#4c1d95', // violet-900
-    positive: '#10b981', // emerald-500
-    positiveLight: '#064e3b', // emerald-800
-    positiveDark: '#047857', // emerald-900
-    negative: '#ef4444', // red-500
-    negativeLight: '#7f1d1d', // red-800
-    negativeDark: '#991b1b', // red-900
-  },
-  warm: {
-    name: 'Sıcak',
-    primary: '#f97316', // orange-500
-    primaryLight: '#fff7ed', // orange-50
-    primaryDark: '#ea580c', // orange-600
-    secondary: '#ef4444', // red-500
-    secondaryLight: '#fee2e2', // red-50
-    secondaryDark: '#dc2626', // red-600
-    accent: '#eab308', // yellow-500
-    accentLight: '#fefce8', // yellow-50
-    accentDark: '#ca8a04', // yellow-600
-    positive: '#10b981', // emerald-500
-    positiveLight: '#d1fae5', // emerald-50
-    positiveDark: '#059669', // emerald-600
-    negative: '#ef4444', // red-500
-    negativeLight: '#fee2e2', // red-50
-    negativeDark: '#dc2626', // red-600
-  },
-  cool: {
-    name: 'Soğuk',
-    primary: '#14b8a6', // teal-500
-    primaryLight: '#ccfbf1', // teal-100
-    primaryDark: '#0d9488', // teal-600
-    secondary: '#06b6d4', // cyan-500
-    secondaryLight: '#cffafe', // cyan-100
-    secondaryDark: '#0891b2', // cyan-600
-    accent: '#6366f1', // indigo-500
-    accentLight: '#e0e7ff', // indigo-100
-    accentDark: '#4f46e5', // indigo-600
-    positive: '#10b981', // emerald-500
-    positiveLight: '#d1fae5', // emerald-50
-    positiveDark: '#059669', // emerald-600
-    negative: '#ef4444', // red-500
-    negativeLight: '#fee2e2', // red-50
-    negativeDark: '#dc2626', // red-600
-  }
-};
-
 export default function ReportPage({ traders, transactions, productTypes, onDeleteTrader }: ReportPageProps) {
   const { isMobile, isTablet } = useResponsive();
-  const [selectedTheme, setSelectedTheme] = useState<keyof typeof themes>('default');
-  
-  const currentTheme = themes[selectedTheme];
+  const { theme, setTheme, currentTheme } = useTheme();
   
   const productTypeMap = productTypes.reduce((acc, pt) => {
     acc[pt.id] = pt;
@@ -136,8 +59,8 @@ export default function ReportPage({ traders, transactions, productTypes, onDele
           <div className="mt-4 md:mt-0 flex items-center space-x-2">
             <Palette className="w-5 h-5 text-gray-600" />
             <select
-              value={selectedTheme}
-              onChange={(e) => setSelectedTheme(e.target.value as keyof typeof themes)}
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as keyof typeof themes)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {Object.entries(themes).map(([key, theme]) => (

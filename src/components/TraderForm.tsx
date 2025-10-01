@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Save, X } from 'lucide-react';
 import { Trader } from '../types';
 import { useResponsive } from '../hooks/usePerformanceOptimization';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface TraderFormProps {
   trader?: Trader;
@@ -10,6 +11,7 @@ interface TraderFormProps {
 }
 
 export default function TraderForm({ trader, onSave, onCancel }: TraderFormProps) {
+  const { currentTheme } = useTheme();
   const { isMobile, isTouchDevice } = useResponsive();
   const [name, setName] = useState(trader?.name || '');
   const [phone, setPhone] = useState(trader?.phone || '');
@@ -31,7 +33,7 @@ export default function TraderForm({ trader, onSave, onCancel }: TraderFormProps
           </h2>
           <button
             onClick={onCancel}
-            className={`text-gray-400 hover:text-gray-600 transition-colors ${isTouchDevice ? 'p-2 rounded-md' : ''}`}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -84,7 +86,8 @@ export default function TraderForm({ trader, onSave, onCancel }: TraderFormProps
           <div className={`flex ${isMobile ? 'space-y-3 flex-col' : 'space-x-3'} pt-4`}>
             <button
               type="submit"
-              className={`${isMobile ? 'w-full' : 'flex-1'} flex items-center justify-center space-x-2 bg-blue-600 text-white ${isMobile ? 'py-4' : 'py-2'} px-4 rounded-md hover:bg-blue-700 transition-colors ${isTouchDevice ? 'active:scale-98' : ''} font-medium`}
+              className="flex-1 flex items-center justify-center space-x-2 text-white py-3 px-4 rounded-md transition-colors"
+              style={{ backgroundColor: currentTheme.primary }}
             >
               <Save className="w-4 h-4" />
               <span>Kaydet</span>
@@ -92,7 +95,7 @@ export default function TraderForm({ trader, onSave, onCancel }: TraderFormProps
             <button
               type="button"
               onClick={onCancel}
-              className={`${isMobile ? 'w-full' : 'flex-1'} flex items-center justify-center space-x-2 bg-gray-300 text-gray-700 ${isMobile ? 'py-4' : 'py-2'} px-4 rounded-md hover:bg-gray-400 transition-colors ${isTouchDevice ? 'active:scale-98' : ''} font-medium`}
+              className="flex-1 flex items-center justify-center space-x-2 bg-gray-300 text-gray-700 py-3 px-4 rounded-md hover:bg-gray-400 transition-colors"
             >
               <X className="w-4 h-4" />
               <span>İptal</span>

@@ -4,6 +4,7 @@ import { Trader, Transaction, ProductType } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useFirebaseData } from './hooks/useFirebaseData';
 import { useResponsive } from './hooks/usePerformanceOptimization';
+import { useTheme } from './contexts/ThemeContext';
 import LoginForm from './components/LoginForm';
 import TraderList from './components/TraderList';
 import TraderForm from './components/TraderForm';
@@ -25,7 +26,8 @@ const generateId = () => {
   }
 };
 
-export default function App() {
+// Temalı App bileşeni
+function ThemedApp() {
   const { user, loading: authLoading, logout } = useAuth();
   const { 
     data, 
@@ -39,6 +41,7 @@ export default function App() {
     deleteProductType 
   } = useFirebaseData();
   const { isMobile, isTablet, isTouchDevice } = useResponsive();
+  const { currentTheme } = useTheme();
   
   const [currentView, setCurrentView] = useState<'traders' | 'reports' | 'productTypes'>('traders');
   const [selectedTrader, setSelectedTrader] = useState<Trader | null>(null);
@@ -285,7 +288,7 @@ Devam etmek istiyor musunuz?`;
       id: generateId(),
       traderId: selectedTrader.id,
       date: transactionDate,
-      type: 'urun_ile_odeme_yapildi',
+      type: 'urun_ile_odeme_yapildi', // Ürün ile ödeme yaptık - borcumuz azaldı
       productType: conversionData.debtProductId,
       quantity: conversionData.debtAmount,
       amount: 0,
@@ -296,7 +299,7 @@ Devam etmek istiyor musunuz?`;
       id: generateId(),
       traderId: selectedTrader.id,
       date: transactionDate,
-      type: 'urun_ile_odeme_alindi',
+      type: 'urun_ile_odeme_alindi', // Ürün ile ödeme aldık - alacağımız azaldı
       productType: conversionData.receivableProductId,
       quantity: conversionData.receivableAmount,
       amount: 0,
@@ -385,7 +388,7 @@ Devam etmek istiyor musunuz?`;
           <div className="max-w-6xl mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: currentTheme.primary }}>
                   <Users className="w-5 h-5 text-white" />
                 </div>
                 <h1 className={`font-bold text-gray-900 tracking-tight ${isMobile ? 'text-lg' : 'text-xl'}`}>Toptancı Takip</h1>
@@ -397,22 +400,22 @@ Devam etmek istiyor musunuz?`;
                 <nav className="hidden md:flex items-center space-x-4">
                   <button
                     onClick={() => setCurrentView('traders')}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors font-medium ${
-                      currentView === 'traders'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors font-medium`}
+                    style={{ 
+                      backgroundColor: currentView === 'traders' ? currentTheme.primaryLight : 'transparent',
+                      color: currentView === 'traders' ? currentTheme.primary : '#374151'
+                    }}
                   >
                     <Users className="w-4 h-4" />
                     <span className="font-medium">Toptancılar</span>
                   </button>
                   <button
                     onClick={() => setCurrentView('reports')}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors font-medium ${
-                      currentView === 'reports'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors font-medium`}
+                    style={{ 
+                      backgroundColor: currentView === 'reports' ? currentTheme.primaryLight : 'transparent',
+                      color: currentView === 'reports' ? currentTheme.primary : '#374151'
+                    }}
                   >
                     <BarChart3 className="w-4 h-4" />
                     <span className="font-medium">Raporlar</span>
@@ -429,7 +432,8 @@ Devam etmek istiyor musunuz?`;
                   {currentView === 'traders' && (
                     <button
                       onClick={() => setShowTraderForm(true)}
-                      className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-semibold leading-tight"
+                      className="flex items-center space-x-2 px-4 py-2 rounded-md transition-colors font-semibold leading-tight text-white"
+                      style={{ backgroundColor: currentTheme.primary }}
                     >
                       <Plus className="w-4 h-4" />
                       <span>Toptancı Ekle</span>
@@ -467,11 +471,11 @@ Devam etmek istiyor musunuz?`;
                         setCurrentView('traders');
                         setMobileMenuOpen(false);
                       }}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                        currentView === 'traders'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors`}
+                      style={{ 
+                        backgroundColor: currentView === 'traders' ? currentTheme.primaryLight : '#f9fafb',
+                        color: currentView === 'traders' ? currentTheme.primary : '#4b5563'
+                      }}
                     >
                       <Users className="w-5 h-5" />
                       <span className="font-medium">Toptancılar</span>
@@ -481,11 +485,11 @@ Devam etmek istiyor musunuz?`;
                         setCurrentView('reports');
                         setMobileMenuOpen(false);
                       }}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                        currentView === 'reports'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors`}
+                      style={{ 
+                        backgroundColor: currentView === 'reports' ? currentTheme.primaryLight : '#f9fafb',
+                        color: currentView === 'reports' ? currentTheme.primary : '#4b5563'
+                      }}
                     >
                       <BarChart3 className="w-5 h-5" />
                       <span className="font-medium">Raporlar</span>
@@ -525,7 +529,8 @@ Devam etmek istiyor musunuz?`;
                           setShowTraderForm(true);
                           setMobileMenuOpen(false);
                         }}
-                        className="flex items-center justify-center space-x-2 bg-blue-600 text-white py-4 rounded-lg mx-4 font-medium hover:bg-blue-700 transition-colors"
+                        className="flex items-center justify-center space-x-2 py-4 rounded-lg mx-4 font-medium transition-colors text-white"
+                        style={{ backgroundColor: currentTheme.primary }}
                       >
                         <Plus className="w-5 h-5" />
                         <span>Yeni Toptancı Ekle</span>
@@ -544,8 +549,8 @@ Devam etmek istiyor musunuz?`;
             <>
               {data.traders.length === 0 ? (
                 <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-blue-600" />
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: currentTheme.primaryLight }}>
+                    <Users className="w-8 h-8" style={{ color: currentTheme.primary }} />
                   </div>
                   <h2 className="text-xl font-semibold text-gray-800 mb-2">
                     Henüz toptancı eklenmemiş
@@ -555,7 +560,8 @@ Devam etmek istiyor musunuz?`;
                   </p>
                   <button
                     onClick={() => setShowTraderForm(true)}
-                    className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors mx-auto"
+                    className="flex items-center space-x-2 px-6 py-3 rounded-md transition-colors mx-auto text-white"
+                    style={{ backgroundColor: currentTheme.primary }}
                   >
                     <Plus className="w-5 h-5" />
                     <span>İlk Toptancıyı Ekle</span>
@@ -657,4 +663,9 @@ Devam etmek istiyor musunuz?`;
       </div>
     </ErrorBoundary>
   );
+}
+
+// Ana App bileşeni ThemeProvider ile sarılıyor
+export default function App() {
+  return <ThemedApp />;
 }

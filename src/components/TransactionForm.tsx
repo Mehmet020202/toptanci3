@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, X, Calculator } from 'lucide-react';
 import { Transaction, TransactionType, ProductType, Trader } from '../types';
 import { transactionTypeLabels } from '../data/defaultData';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface TransactionFormProps {
   transaction?: Transaction;
@@ -20,6 +21,8 @@ export default function TransactionForm({
   onCancel,
   selectedTraderId
 }: TransactionFormProps) {
+  const { currentTheme } = useTheme();
+
   // Safe date initialization
   const getInitialDate = () => {
     try {
@@ -339,7 +342,8 @@ export default function TransactionForm({
           <div className="flex space-x-3 pt-4">
             <button
               type="submit"
-              className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors"
+              className="flex-1 flex items-center justify-center space-x-2 text-white py-3 px-4 rounded-md transition-colors"
+              style={{ backgroundColor: currentTheme.primary }}
             >
               <Save className="w-4 h-4" />
               <span>Kaydet</span>

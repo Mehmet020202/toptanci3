@@ -5,6 +5,7 @@ import { calculateBalances, formatMoney, formatDate, formatDateTime } from '../u
 import { transactionTypeLabels } from '../data/defaultData';
 import { generatePDFContent, downloadPDF } from '../utils/pdfGenerator';
 import { useResponsive, usePaginatedData } from '../hooks/usePerformanceOptimization';
+import { useTheme } from '../contexts/ThemeContext';
 import DebtCalculator from './DebtCalculator';
 
 interface TraderDetailProps {
@@ -26,7 +27,7 @@ interface TraderDetailProps {
 
 export default function TraderDetail({
   trader,
-  transactions,
+  transactions: allTransactions,
   productTypes,
   onBack,
   onAddTransaction,
@@ -35,6 +36,7 @@ export default function TraderDetail({
   onConvertDebt
 }: TraderDetailProps) {
   const { isMobile, isTablet, isTouchDevice } = useResponsive();
+  const { currentTheme } = useTheme();
   
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showDebtCalculator, setShowDebtCalculator] = useState(false);
@@ -43,7 +45,7 @@ export default function TraderDetail({
   const [pdfEndDate, setPdfEndDate] = useState<string>('');
   const [showMobileActions, setShowMobileActions] = useState(false);
   
-  const traderTransactions = transactions
+  const traderTransactions = allTransactions
     .filter(t => t.traderId === trader.id)
     .sort((a, b) => {
       // Safe date parsing for sorting
@@ -73,7 +75,7 @@ export default function TraderDetail({
     hasPrevPage
   } = usePaginatedData(traderTransactions, isMobile ? 10 : 20);
 
-  const { moneyBalance, productBalances } = calculateBalances(trader, transactions);
+  const { moneyBalance, productBalances } = calculateBalances(trader, allTransactions);
   
   const productTypeMap = productTypes.reduce((acc, pt) => {
     acc[pt.id] = pt;
@@ -131,7 +133,7 @@ export default function TraderDetail({
       // Tüm işlemleri gönder (bakiye hesaplaması için)
       // Tarih aralığı filtresi PDF generator içinde yapılacak
       const dateRange = pdfStartDate || pdfEndDate ? { start: pdfStartDate, end: pdfEndDate } : undefined;
-      const content = generatePDFContent(trader, transactions, productTypes, 1, 'A4', dateRange);
+      const content = generatePDFContent(trader, allTransactions, productTypes, 1, 'A4', dateRange);
       const fileName = pdfStartDate && pdfEndDate ? 
         `_${pdfStartDate}_${pdfEndDate}` : 
         `_${formatDate(new Date()).replace(/\./g, '_')}`;
@@ -182,13 +184,14 @@ export default function TraderDetail({
           <div className="flex items-center space-x-4 mb-4 md:mb-0">
             <button
               onClick={onBack}
-              className={`flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors ${isTouchDevice ? 'p-2 rounded-md' : ''}`}
+              className={`flex items-center space-x-2 transition-colors ${isTouchDevice ? 'p-2 rounded-md' : ''}`}
+              style={{ color: currentTheme.primary }}
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Geri</span>
             </button>
-            <div className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} bg-blue-100 rounded-full flex items-center justify-center`}>
-              <User className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} text-blue-600`} />
+            <div className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} rounded-full flex items-center justify-center`} style={{ backgroundColor: currentTheme.primaryLight }}>
+              <User className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'}`} style={{ color: currentTheme.primary }} />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-gray-800 truncate`}>{trader.name}</h1>
@@ -208,21 +211,24 @@ export default function TraderDetail({
           <div className="flex space-x-2">
             <button
               onClick={() => setShowDebtCalculator(true)}
-              className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
+              className="flex items-center space-x-2 text-white px-4 py-2 rounded-md transition-colors"
+              style={{ backgroundColor: currentTheme.primary }}
             >
               <Calculator className="w-4 h-4" />
               <span>Borç Hesapla</span>
             </button>
             <button
               onClick={() => setShowPDFSettings(true)}
-              className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+              className="flex items-center space-x-2 text-white px-4 py-2 rounded-md transition-colors"
+              style={{ backgroundColor: currentTheme.secondary }}
             >
               <FileText className="w-4 h-4" />
               <span>PDF Rapor</span>
             </button>
             <button
               onClick={onAddTransaction}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 text-white px-4 py-2 rounded-md transition-colors"
+              style={{ backgroundColor: currentTheme.accent }}
             >
               <Plus className="w-4 h-4" />
               <span>Yeni İşlem</span>
@@ -233,9 +239,9 @@ export default function TraderDetail({
         {/* Bakiye Bilgileri */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Para Bakiyesi */}
-          <div className={`p-4 rounded-lg ${moneyBalance >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+          <div className={`p-4 rounded-lg`} style={{ backgroundColor: moneyBalance >= 0 ? currentTheme.positiveLight : currentTheme.negativeLight }}>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Para Bakiyesi</h3>
-            <div className={`text-2xl font-bold ${moneyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold`} style={{ color: moneyBalance >= 0 ? currentTheme.positive : currentTheme.negative }}>
               {moneyBalance >= 0 ? '+' : ''}
               {formatMoney(moneyBalance)}
             </div>
@@ -252,7 +258,7 @@ export default function TraderDetail({
                 {/* Alacaklar */}
                 {Object.entries(productBalances).some(([, balance]) => balance > 0) && (
                   <div>
-                    <h4 className="text-xs font-medium text-green-700 mb-1">Toptancıdan Alacaklarım</h4>
+                    <h4 className="text-xs font-medium mb-1" style={{ color: currentTheme.positive }}>Toptancıdan Alacaklarım</h4>
                     <div className="space-y-1">
                       {Object.entries(productBalances).map(([productId, balance]) => {
                         if (balance <= 0) return null;
@@ -262,7 +268,7 @@ export default function TraderDetail({
                         return (
                           <div key={productId} className="flex justify-between text-sm">
                             <span className="text-gray-600">{product.name}</span>
-                            <span className="text-green-600">
+                            <span style={{ color: currentTheme.positive }}>
                               +{balance} {product.unit}
                             </span>
                           </div>
@@ -275,7 +281,7 @@ export default function TraderDetail({
                 {/* Borçlar */}
                 {Object.entries(productBalances).some(([, balance]) => balance < 0) && (
                   <div>
-                    <h4 className="text-xs font-medium text-red-700 mb-1">Toptancıya Olan Borçlarım</h4>
+                    <h4 className="text-xs font-medium mb-1" style={{ color: currentTheme.negative }}>Toptancıya Olan Borçlarım</h4>
                     <div className="space-y-1">
                       {Object.entries(productBalances).map(([productId, balance]) => {
                         if (balance >= 0) return null;
@@ -285,7 +291,7 @@ export default function TraderDetail({
                         return (
                           <div key={productId} className="flex justify-between text-sm">
                             <span className="text-gray-600">{product.name}</span>
-                            <span className="text-red-600">
+                            <span style={{ color: currentTheme.negative }}>
                               {balance} {product.unit}
                             </span>
                           </div>
@@ -303,7 +309,7 @@ export default function TraderDetail({
 
         {/* Notlar */}
         {trader.notes && (
-          <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+          <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: currentTheme.accentLight }}>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Notlar</h3>
             <p className="text-sm text-gray-600">{trader.notes}</p>
           </div>
@@ -416,7 +422,8 @@ export default function TraderDetail({
               <div className="mb-4">Henüz işlem bulunmuyor</div>
               <button
                 onClick={onAddTransaction}
-                className="text-blue-600 hover:text-blue-800"
+                className="text-white"
+                style={{ backgroundColor: currentTheme.primary }}
               >
                 İlk işlemi ekleyin
               </button>
