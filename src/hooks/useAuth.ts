@@ -3,8 +3,7 @@ import {
   User, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
   updateProfile
@@ -26,18 +25,6 @@ export function useAuth() {
       setUser(user);
       setLoading(false);
     });
-
-    // Handle redirect result
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          console.log('Google ile giriş başarılı');
-        }
-      })
-      .catch((error) => {
-        console.error('Redirect hatası:', error);
-        setError(getErrorMessage(error.code));
-      });
 
     return unsubscribe;
   }, []);
@@ -78,19 +65,7 @@ export function useAuth() {
     try {
       setError(null);
       setLoading(true);
-      
-      // Mobil cihaz kontrolü
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        // Mobil cihazlarda özel ayarlar
-        googleProvider.setCustomParameters({
-          prompt: 'select_account',
-          login_hint: ''
-        });
-      }
-      
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
     } catch (err) {
       const authError = err as AuthError;
       setError(getErrorMessage(authError.code));

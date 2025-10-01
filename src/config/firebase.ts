@@ -22,10 +22,6 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const database = getDatabase(app);
 export const googleProvider = new GoogleAuthProvider();
-// Mobil cihazlar için ek ayarlar
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
 export const analytics = getAnalytics(app);
 
 export default app;
