@@ -1,0 +1,241 @@
+/* Enhanced Typography for Better Readability */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer utilities {
+  /* Touch-friendly interactions */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Safe area for notched devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Smooth scrolling with momentum on iOS */
+  .momentum-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+  
+  /* Active state for touch devices */
+  .active\:scale-98:active {
+    transform: scale(0.98);
+  }
+  
+  /* Prevent text selection on UI elements */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Performance optimizations */
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .hardware-accelerated {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  /* Enhanced Typography Utilities */
+  .text-readable {
+    line-height: 1.6;
+    letter-spacing: 0.025em;
+  }
+  
+  .text-title {
+    @apply text-readable font-semibold tracking-tight;
+    line-height: 1.2;
+  }
+  
+  .text-body {
+    @apply text-readable;
+    line-height: 1.7;
+  }
+  
+  .text-caption {
+    @apply text-readable;
+    line-height: 1.5;
+    letter-spacing: 0.05em;
+  }
+}
+
+/* Base styles for better mobile experience */
+@layer base {
+  html {
+    /* Prevent zoom on focus for iOS */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  body {
+    /* Enhanced font and readability */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    /* Improve font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Better text rendering */
+    text-rendering: optimizeLegibility;
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+    /* Enhanced line height for readability */
+    line-height: 1.6;
+    /* Better letter spacing */
+    letter-spacing: 0.025em;
+  }
+  
+  /* Enhanced heading styles */
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+    font-weight: 600;
+    color: #1f2937;
+  }
+  
+  /* Better paragraph readability */
+  p {
+    line-height: 1.7;
+    color: #374151;
+  }
+  
+  /* Enhanced link styles */
+  a {
+    color: #2563eb;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+  }
+  
+  /* Improve tap responsiveness */
+  button, [role="button"] {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  /* Input optimization */
+  input, textarea, select {
+    /* Prevent zoom on iOS when font-size is less than 16px */
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: 0.025em;
+  }
+  
+  /* Label improvements */
+  label {
+    font-weight: 500;
+    color: #374151;
+    line-height: 1.5;
+  }
+  
+  /* Table responsiveness */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  /* Image optimization */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Performance optimizations for large lists */
+@layer components {
+  .virtual-list-item {
+    @apply will-change-transform hardware-accelerated;
+  }
+  
+  .sticky-header {
+    @apply sticky top-0 z-40 bg-white shadow-sm;
+  }
+  
+  /* Enhanced mobile-specific components */
+  .mobile-card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3;
+    /* Enhanced readability */
+    line-height: 1.6;
+  }
+  
+  .mobile-button {
+    @apply touch-target px-4 py-3 rounded-lg font-medium transition-colors active:scale-98;
+    /* Better text readability */
+    line-height: 1.4;
+    letter-spacing: 0.025em;
+    min-height: 48px;
+  }
+  
+  .mobile-input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    /* Enhanced input readability */
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: 0.025em;
+    min-height: 48px;
+  }
+  
+  /* Enhanced text components */
+  .card-title {
+    @apply text-title text-lg font-semibold text-gray-900;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-subtitle {
+    @apply text-caption text-sm font-medium text-gray-600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .card-body {
+    @apply text-body text-base text-gray-700;
+  }
+  
+  .form-label {
+    @apply text-caption text-sm font-semibold text-gray-700;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  /* Enhanced table styles for better readability */
+  .data-table {
+    @apply w-full;
+  }
+  
+  .data-table th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider bg-gray-50;
+    line-height: 1.4;
+  }
+  
+  .data-table td {
+    @apply px-4 py-4 text-sm text-gray-900 border-b border-gray-200;
+    line-height: 1.6;
+  }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  /* Add dark mode styles here if needed */
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

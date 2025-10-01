@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Toptancı Takip" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=yes" />
+    <meta name="application-name" content="Toptancı Takip" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <!-- PWA Apple Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563eb" />
+    
+    <title>Toptancı Takip - Kolay ve Okunabilir Toptancı Yönetimi</title>
+    <style>
+      /* Prevent FOUC and optimize initial render */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #f9fafb;
+        overflow-x: hidden;
+      }
+      
+      /* Loading state */
+      #root:empty::before {
+        content: 'Yükleniyor...';
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        font-size: 1.125rem;
+        color: #6b7280;
+      }
+      
+      /* Improve touch targets */
+      button, [role="button"], input[type="submit"], input[type="button"] {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      
+      /* Optimize for mobile performance */
+      * {
+        -webkit-tap-highlight-color: rgba(37, 99, 235, 0.1);
+        -webkit-touch-callout: none;
+      }
+      
+      /* Smooth scrolling for supported browsers */
+      @media (prefers-reduced-motion: no-preference) {
+        html {
+          scroll-behavior: smooth;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
