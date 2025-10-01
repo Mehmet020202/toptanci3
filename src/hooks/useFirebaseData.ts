@@ -104,17 +104,25 @@ export function useFirebaseData() {
             };
           });
           
+          // Parse product types and ensure they have order property
+          const productTypes = Object.values(data.productTypes || {}).map((productType: any, index) => {
+            return {
+              ...productType,
+              order: productType.order ?? index
+            };
+          });
+          
           setData({
             traders,
             transactions,
-            productTypes: Object.values(data.productTypes || {})
+            productTypes
           });
         } else {
           // Varsayılan ürün türlerini ekle
           const defaultProductTypes: ProductType[] = [
-            { id: 'altın', name: 'Altın', unit: 'gram', currentPrice: 1850 },
-            { id: 'gümüş', name: 'Gümüş', unit: 'gram', currentPrice: 25 },
-            { id: 'çeyrek', name: 'Çeyrek Altın', unit: 'adet', currentPrice: 4800 }
+            { id: 'altın', name: 'Altın', unit: 'gram', currentPrice: 1850, order: 1 },
+            { id: 'gümüş', name: 'Gümüş', unit: 'gram', currentPrice: 25, order: 2 },
+            { id: 'çeyrek', name: 'Çeyrek Altın', unit: 'adet', currentPrice: 4800, order: 3 }
           ];
           
           setData({
@@ -146,8 +154,19 @@ export function useFirebaseData() {
     if (!user) return;
     
     try {
+      // Create a clean object with only defined values
+      const cleanTrader: any = {};
+      
+      // Process each property explicitly
+      Object.entries(trader).forEach(([key, value]) => {
+        // Skip undefined values
+        if (value !== undefined) {
+          cleanTrader[key] = value;
+        }
+      });
+      
       const traderRef = ref(database, `users/${user.uid}/traders/${trader.id}`);
-      await set(traderRef, trader);
+      await set(traderRef, cleanTrader);
     } catch (err) {
       setError('Toptancı kaydedilirken hata oluştu.');
       throw err;
@@ -190,11 +209,24 @@ export function useFirebaseData() {
     if (!user) return;
     
     try {
-      const transactionRef = ref(database, `users/${user.uid}/transactions/${transaction.id}`);
-      await set(transactionRef, {
-        ...transaction,
-        date: transaction.date.toISOString() // Date objesini string'e çevir
+      // Create a clean object with only defined values
+      const cleanTransaction: any = {};
+      
+      // Process each property explicitly
+      Object.entries(transaction).forEach(([key, value]) => {
+        // Skip undefined values
+        if (value !== undefined) {
+          // Special handling for date
+          if (key === 'date') {
+            cleanTransaction[key] = value instanceof Date ? value.toISOString() : new Date().toISOString();
+          } else {
+            cleanTransaction[key] = value;
+          }
+        }
       });
+      
+      const transactionRef = ref(database, `users/${user.uid}/transactions/${transaction.id}`);
+      await set(transactionRef, cleanTransaction);
       
       // Toptancının son işlem tarihini güncelle
       const trader = data.traders.find(t => t.id === transaction.traderId);
@@ -226,8 +258,19 @@ export function useFirebaseData() {
     if (!user) return;
     
     try {
+      // Create a clean object with only defined values
+      const cleanProductType: any = {};
+      
+      // Process each property explicitly
+      Object.entries(productType).forEach(([key, value]) => {
+        // Skip undefined values
+        if (value !== undefined) {
+          cleanProductType[key] = value;
+        }
+      });
+      
       const productTypeRef = ref(database, `users/${user.uid}/productTypes/${productType.id}`);
-      await set(productTypeRef, productType);
+      await set(productTypeRef, cleanProductType);
     } catch (err) {
       setError('Ürün türü kaydedilirken hata oluştu.');
       throw err;

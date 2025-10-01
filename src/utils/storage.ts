@@ -66,6 +66,15 @@ export function loadFromStorage(): AppData {
         });
       }
       
+      // Validate and parse product types with order property
+      if (data.productTypes && Array.isArray(data.productTypes)) {
+        data.productTypes.forEach((productType: { order?: number }, index: number) => {
+          if (productType.order === undefined) {
+            productType.order = index;
+          }
+        });
+      }
+      
       return data;
     }
   } catch (error) {
@@ -107,6 +116,15 @@ export function importFromJSON(jsonString: string): AppData {
         } catch (error) {
           console.warn('Error parsing transaction date:', transaction, error);
           transaction.date = new Date(); // Fallback to current date
+        }
+      });
+    }
+    
+    // Validate and parse product types with order property
+    if (data.productTypes && Array.isArray(data.productTypes)) {
+      data.productTypes.forEach((productType: { order?: number }, index: number) => {
+        if (productType.order === undefined) {
+          productType.order = index;
         }
       });
     }

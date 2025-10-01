@@ -37,6 +37,7 @@ export interface ProductType {
   name: string;
   unit: 'gram' | 'adet';
   currentPrice: number;
+  order?: number; // For custom ordering
 }
 
 export interface AppData {

@@ -126,8 +126,19 @@ export default function App() {
   };
 
   const handleAddTransaction = async (transactionData: Omit<Transaction, 'id'>) => {
+    // Create a clean transaction object with only defined values
+    const cleanTransactionData: any = {};
+    
+    // Process each property explicitly
+    Object.entries(transactionData).forEach(([key, value]) => {
+      // Skip undefined values
+      if (value !== undefined) {
+        cleanTransactionData[key] = value;
+      }
+    });
+    
     const newTransaction: Transaction = {
-      ...transactionData,
+      ...cleanTransactionData,
       id: generateId()
     };
 
@@ -141,8 +152,19 @@ export default function App() {
   };
 
   const handleEditTransaction = async (transactionId: string, transactionData: Omit<Transaction, 'id'>) => {
+    // Create a clean transaction object with only defined values
+    const cleanTransactionData: any = {};
+    
+    // Process each property explicitly
+    Object.entries(transactionData).forEach(([key, value]) => {
+      // Skip undefined values
+      if (value !== undefined) {
+        cleanTransactionData[key] = value;
+      }
+    });
+    
     const updatedTransaction: Transaction = {
-      ...transactionData,
+      ...cleanTransactionData,
       id: transactionId
     };
 
@@ -258,11 +280,12 @@ Devam etmek istiyor musunuz?`;
       transactionDate = new Date(); // Fallback to current date
     }
 
+    // Create clean transaction objects
     const debtReductionTransaction: Transaction = {
       id: generateId(),
       traderId: selectedTrader.id,
       date: transactionDate,
-      type: 'urun_ile_odeme_yapildi', // Ürün ile ödeme yaptık - borcumuz azaldı
+      type: 'urun_ile_odeme_yapildi',
       productType: conversionData.debtProductId,
       quantity: conversionData.debtAmount,
       amount: 0,
@@ -273,7 +296,7 @@ Devam etmek istiyor musunuz?`;
       id: generateId(),
       traderId: selectedTrader.id,
       date: transactionDate,
-      type: 'urun_ile_odeme_alindi', // Ürün ile ödeme aldık - alacağımız azaldı
+      type: 'urun_ile_odeme_alindi',
       productType: conversionData.receivableProductId,
       quantity: conversionData.receivableAmount,
       amount: 0,
@@ -300,9 +323,18 @@ Devam etmek istiyor musunuz?`;
     }
   };
 
-  // ... existing code for UI rendering ...
-  // (The rest of the App component rendering logic continues here)
-  
+  // Add this new function to handle product type reordering
+  const handleReorderProductTypes = async (reorderedProductTypes: ProductType[]) => {
+    try {
+      // Update each product type with its new order
+      for (const productType of reorderedProductTypes) {
+        await saveProductType(productType);
+      }
+    } catch (err) {
+      console.error('Ürün türleri yeniden sıralanırken hata oluştu:', err);
+    }
+  };
+
   if (selectedTrader) {
     return (
       <ErrorBoundary>
@@ -556,8 +588,10 @@ Devam etmek istiyor musunuz?`;
               onDelete={handleDeleteProductType}
               onAdd={() => setShowProductTypeForm(true)}
               onBack={() => setCurrentView('traders')}
+              onReorder={handleReorderProductTypes}
             />
           )}
+
         </main>
 
         {/* Modals */}

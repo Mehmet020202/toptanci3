@@ -7,16 +7,16 @@ export function generateLargeTestDataset(
   transactionCount: number = 1000
 ): AppData {
   const productTypes: ProductType[] = [
-    { id: 'altın', name: 'Altın', unit: 'gram', currentPrice: 1850 },
-    { id: 'gümüş', name: 'Gümüş', unit: 'gram', currentPrice: 25 },
-    { id: 'çeyrek', name: 'Çeyrek Altın', unit: 'adet', currentPrice: 4800 },
-    { id: 'yarım', name: 'Yarım Altın', unit: 'adet', currentPrice: 9600 },
-    { id: 'tam', name: 'Tam Altın', unit: 'adet', currentPrice: 19200 },
-    { id: 'bilezik', name: 'Altın Bilezik', unit: 'gram', currentPrice: 1900 },
-    { id: 'yüzük', name: 'Altın Yüzük', unit: 'gram', currentPrice: 1950 },
-    { id: 'kolye', name: 'Altın Kolye', unit: 'gram', currentPrice: 1920 },
-    { id: 'küpe', name: 'Altın Küpe', unit: 'gram', currentPrice: 1880 },
-    { id: 'gümüş_bilezik', name: 'Gümüş Bilezik', unit: 'gram', currentPrice: 28 }
+    { id: 'altın', name: 'Altın', unit: 'gram', currentPrice: 1850, order: 1 },
+    { id: 'gümüş', name: 'Gümüş', unit: 'gram', currentPrice: 25, order: 2 },
+    { id: 'çeyrek', name: 'Çeyrek Altın', unit: 'adet', currentPrice: 4800, order: 3 },
+    { id: 'yarım', name: 'Yarım Altın', unit: 'adet', currentPrice: 9600, order: 4 },
+    { id: 'tam', name: 'Tam Altın', unit: 'adet', currentPrice: 19200, order: 5 },
+    { id: 'bilezik', name: 'Altın Bilezik', unit: 'gram', currentPrice: 1900, order: 6 },
+    { id: 'yüzük', name: 'Altın Yüzük', unit: 'gram', currentPrice: 1950, order: 7 },
+    { id: 'kolye', name: 'Altın Kolye', unit: 'gram', currentPrice: 1920, order: 8 },
+    { id: 'küpe', name: 'Altın Küpe', unit: 'gram', currentPrice: 1880, order: 9 },
+    { id: 'gümüş_bilezik', name: 'Gümüş Bilezik', unit: 'gram', currentPrice: 28, order: 10 }
   ];
 
   // Generate traders

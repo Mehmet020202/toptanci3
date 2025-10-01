@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Edit, Trash2, Plus, Package, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Edit, Trash2, Plus, Package, ArrowLeft, ChevronUp, ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { ProductType } from '../types';
 
 interface ProductTypeManagementProps {
@@ -8,6 +8,7 @@ interface ProductTypeManagementProps {
   onDelete: (productTypeId: string) => void;
   onAdd: () => void;
   onBack: () => void;
+  onReorder?: (reorderedProductTypes: ProductType[]) => void;
 }
 
 export default function ProductTypeManagement({
@@ -15,18 +16,37 @@ export default function ProductTypeManagement({
   onEdit,
   onDelete,
   onAdd,
-  onBack
+  onBack,
+  onReorder
 }: ProductTypeManagementProps) {
   const [sortConfig, setSortConfig] = useState<{key: keyof ProductType; direction: 'asc' | 'desc'} | null>(null);
+  const [localProductTypes, setLocalProductTypes] = useState<ProductType[]>([]);
 
-  const sortedProductTypes = [...productTypes];
+  // Update local product types when prop changes and sort by order
+  useEffect(() => {
+    const sorted = [...productTypes].sort((a, b) => {
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+    setLocalProductTypes(sorted);
+  }, [productTypes]);
+
+  const sortedProductTypes = [...localProductTypes];
   
   if (sortConfig !== null) {
     sortedProductTypes.sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+      
+      if (aValue === undefined || bValue === undefined) {
+        return 0;
+      }
+      
+      if (aValue < bValue) {
         return sortConfig.direction === 'asc' ? -1 : 1;
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
+      if (aValue > bValue) {
         return sortConfig.direction === 'asc' ? 1 : -1;
       }
       return 0;
@@ -48,6 +68,56 @@ export default function ProductTypeManagement({
     return sortConfig.direction === 'asc' ? 
       <ChevronUp className="w-4 h-4 text-blue-600" /> : 
       <ChevronDown className="w-4 h-4 text-blue-600" />;
+  };
+
+  // Move item up in the list
+  const moveUp = (index: number) => {
+    if (index <= 0) return;
+    const newProductTypes = [...localProductTypes];
+    [newProductTypes[index - 1], newProductTypes[index]] = [newProductTypes[index], newProductTypes[index - 1]];
+    
+    // Update order values
+    if (newProductTypes[index - 1].order !== undefined && newProductTypes[index].order !== undefined) {
+      const tempOrder = newProductTypes[index - 1].order;
+      newProductTypes[index - 1].order = newProductTypes[index].order;
+      newProductTypes[index].order = tempOrder;
+    } else {
+      // If order is not defined, set it
+      newProductTypes[index - 1].order = index;
+      newProductTypes[index].order = index - 1;
+    }
+    
+    setLocalProductTypes(newProductTypes);
+    
+    // Call onReorder if provided
+    if (onReorder) {
+      onReorder(newProductTypes);
+    }
+  };
+
+  // Move item down in the list
+  const moveDown = (index: number) => {
+    if (index >= localProductTypes.length - 1) return;
+    const newProductTypes = [...localProductTypes];
+    [newProductTypes[index], newProductTypes[index + 1]] = [newProductTypes[index + 1], newProductTypes[index]];
+    
+    // Update order values
+    if (newProductTypes[index].order !== undefined && newProductTypes[index + 1].order !== undefined) {
+      const tempOrder = newProductTypes[index].order;
+      newProductTypes[index].order = newProductTypes[index + 1].order;
+      newProductTypes[index + 1].order = tempOrder;
+    } else {
+      // If order is not defined, set it
+      newProductTypes[index].order = index;
+      newProductTypes[index + 1].order = index + 1;
+    }
+    
+    setLocalProductTypes(newProductTypes);
+    
+    // Call onReorder if provided
+    if (onReorder) {
+      onReorder(newProductTypes);
+    }
   };
 
   return (
@@ -108,6 +178,9 @@ export default function ProductTypeManagement({
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sırala
+                    </th>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => requestSort('name')}
@@ -141,8 +214,28 @@ export default function ProductTypeManagement({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {sortedProductTypes.map((productType) => (
+                  {sortedProductTypes.map((productType, index) => (
                     <tr key={productType.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col space-y-1">
+                          <button
+                            onClick={() => moveUp(index)}
+                            disabled={index === 0}
+                            className={`p-1 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-200'}`}
+                            title="Yukarı taşı"
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => moveDown(index)}
+                            disabled={index === sortedProductTypes.length - 1}
+                            className={`p-1 rounded ${index === sortedProductTypes.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-200'}`}
+                            title="Aşağı taşı"
+                          >
+                            <ArrowDown className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {productType.name}
@@ -203,7 +296,7 @@ export default function ProductTypeManagement({
                   <li>Güncel fiyat, mal alımı/satışı işlemlerinde varsayılan birim fiyat olarak kullanılır</li>
                   <li>Ürün ile ödeme ve borç işlemlerinde birim fiyat kullanılmaz</li>
                   <li>Bir ürün türünü silebilmek için önce o ürünü kullanan tüm işlemleri silmelisiniz</li>
-                  <li>Ürün türlerini sıralamak için başlık satırındaki sütun başlıklarına tıklayabilirsiniz</li>
+                  <li>Ürün türlerini yeniden sıralamak için yukarı/aşağı oklara tıklayabilirsiniz</li>
                 </ul>
               </div>
             </div>
