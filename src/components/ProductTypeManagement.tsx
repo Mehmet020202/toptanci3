@@ -1,5 +1,5 @@
-
-import { Edit, Trash2, Plus, Package, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { Edit, Trash2, Plus, Package, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
 import { ProductType } from '../types';
 
 interface ProductTypeManagementProps {
@@ -17,6 +17,39 @@ export default function ProductTypeManagement({
   onAdd,
   onBack
 }: ProductTypeManagementProps) {
+  const [sortConfig, setSortConfig] = useState<{key: keyof ProductType; direction: 'asc' | 'desc'} | null>(null);
+
+  const sortedProductTypes = [...productTypes];
+  
+  if (sortConfig !== null) {
+    sortedProductTypes.sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }
+
+  const requestSort = (key: keyof ProductType) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: keyof ProductType) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <ChevronUp className="w-4 h-4 text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc' ? 
+      <ChevronUp className="w-4 h-4 text-blue-600" /> : 
+      <ChevronDown className="w-4 h-4 text-blue-600" />;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -51,7 +84,7 @@ export default function ProductTypeManagement({
 
         {/* Product Types List */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {productTypes.length === 0 ? (
+          {sortedProductTypes.length === 0 ? (
             <div className="p-8 text-center">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Package className="w-8 h-8 text-gray-400" />
@@ -75,14 +108,32 @@ export default function ProductTypeManagement({
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ürün Adı
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('name')}
+                    >
+                      <div className="flex items-center">
+                        <span>Ürün Adı</span>
+                        <span className="ml-1">{getSortIcon('name')}</span>
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Birim
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('unit')}
+                    >
+                      <div className="flex items-center">
+                        <span>Birim</span>
+                        <span className="ml-1">{getSortIcon('unit')}</span>
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Güncel Fiyat
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('currentPrice')}
+                    >
+                      <div className="flex items-center">
+                        <span>Güncel Fiyat</span>
+                        <span className="ml-1">{getSortIcon('currentPrice')}</span>
+                      </div>
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       İşlemler
@@ -90,7 +141,7 @@ export default function ProductTypeManagement({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {productTypes.map((productType) => (
+                  {sortedProductTypes.map((productType) => (
                     <tr key={productType.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
@@ -152,6 +203,7 @@ export default function ProductTypeManagement({
                   <li>Güncel fiyat, mal alımı/satışı işlemlerinde varsayılan birim fiyat olarak kullanılır</li>
                   <li>Ürün ile ödeme ve borç işlemlerinde birim fiyat kullanılmaz</li>
                   <li>Bir ürün türünü silebilmek için önce o ürünü kullanan tüm işlemleri silmelisiniz</li>
+                  <li>Ürün türlerini sıralamak için başlık satırındaki sütun başlıklarına tıklayabilirsiniz</li>
                 </ul>
               </div>
             </div>
