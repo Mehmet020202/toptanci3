@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, CreditCard as Edit, Trash2, FileText, User, Phone, Calendar, Calculator, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Plus, CreditCard as Edit, Trash2, FileText, User, Phone, Calendar, Calculator, X, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { Trader, Transaction, ProductType } from '../types';
 import { calculateBalances, formatMoney, formatDate, formatDateTime } from '../utils/calculations';
 import { transactionTypeLabels } from '../data/defaultData';
@@ -44,9 +44,12 @@ export default function TraderDetail({
   const [pdfStartDate, setPdfStartDate] = useState<string>('');
   const [pdfEndDate, setPdfEndDate] = useState<string>('');
   const [showMobileActions, setShowMobileActions] = useState(false);
+  const [transactionFilter, setTransactionFilter] = useState<string>('all'); // New filter state
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false); // For mobile filter dropdown
   
   const traderTransactions = allTransactions
     .filter(t => t.traderId === trader.id)
+    .filter(t => transactionFilter === 'all' || t.type === transactionFilter) // Apply filter
     .sort((a, b) => {
       // Safe date parsing for sorting
       try {
@@ -73,7 +76,7 @@ export default function TraderDetail({
     goToPage,
     hasNextPage,
     hasPrevPage
-  } = usePaginatedData(traderTransactions, isMobile ? 10 : 20);
+  } = usePaginatedData(traderTransactions, isMobile ? 10 : 20); // Back to original page size
 
   const { moneyBalance, productBalances } = calculateBalances(trader, allTransactions);
   
@@ -175,6 +178,21 @@ export default function TraderDetail({
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Transaction type options for filter
+  const transactionTypes = [
+    { value: 'all', label: 'Tüm İşlemler' },
+    { value: 'mal_alimi', label: 'Mal Alımı' },
+    { value: 'mal_satisi', label: 'Mal Satışı' },
+    { value: 'odeme_yapildi', label: 'Ödeme Yapıldı' },
+    { value: 'tahsilat', label: 'Tahsilat' },
+    { value: 'nakit_borc', label: 'Nakit Borç' },
+    { value: 'nakit_tahsilat', label: 'Nakit Tahsilat' },
+    { value: 'urun_ile_odeme_yapildi', label: 'Ürün ile Ödeme Yapıldı' },
+    { value: 'urun_ile_odeme_alindi', label: 'Ürün ile Ödeme Alındı' },
+    { value: 'urun_ile_borc_verme', label: 'Ürün ile Borç Verme' },
+    { value: 'urun_ile_borc_alma', label: 'Ürün ile Borç Alma' }
+  ];
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'px-2' : ''}`}>
@@ -319,17 +337,68 @@ export default function TraderDetail({
       {/* İşlemler */}
       <div className="bg-white rounded-lg shadow-md">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800">
-              İşlem Geçmişi ({traderTransactions.length})
-            </h2>
-            <button
-              onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-              className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              Tarih: {sortOrder === 'desc' ? 'Yeniden Eskiye' : 'Eskiden Yeniye'}
-            </button>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800">
+                İşlem Geçmişi ({traderTransactions.length})
+              </h2>
+              
+              {/* Mobile Filter Button */}
+              <div className="md:hidden">
+                <button
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-md"
+                >
+                  <Filter className="w-4 h-4" />
+                  <span>Filtre</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              {/* Desktop Filter Dropdown */}
+              <div className="hidden md:block">
+                <select
+                  value={transactionFilter}
+                  onChange={(e) => setTransactionFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {transactionTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <button
+                onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+                className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Tarih: {sortOrder === 'desc' ? 'Yeniden Eskiye' : 'Eskiden Yeniye'}
+              </button>
+            </div>
           </div>
+          
+          {/* Mobile Filter Dropdown */}
+          {showFilterDropdown && (
+            <div className="md:hidden mt-4">
+              <select
+                value={transactionFilter}
+                onChange={(e) => {
+                  setTransactionFilter(e.target.value);
+                  setShowFilterDropdown(false);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {transactionTypes.map(type => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -427,6 +496,77 @@ export default function TraderDetail({
               >
                 İlk işlemi ekleyin
               </button>
+            </div>
+          )}
+          
+          {/* Pagination Controls - Always visible on mobile */}
+          {traderTransactions.length > 0 && totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="text-sm text-gray-700">
+                Toplam {traderTransactions.length} işlem - Sayfa {currentPage} / {totalPages}
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-1">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={!hasPrevPage}
+                  className={`px-3 py-1 rounded-md text-sm ${
+                    hasPrevPage 
+                      ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Önceki
+                </button>
+                
+                {/* Page numbers - Show all pages on mobile, limited on desktop */}
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  
+                  // On mobile, show all pages
+                  // On desktop, show current page and nearby pages
+                  if (isMobile || 
+                      pageNum === 1 || 
+                      pageNum === totalPages || 
+                      (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)) {
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => goToPage(pageNum)}
+                        className={`px-3 py-1 rounded-md text-sm ${
+                          currentPage === pageNum
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                  
+                  // Show ellipsis for skipped pages (desktop only)
+                  if (!isMobile && (pageNum === currentPage - 3 || pageNum === currentPage + 3)) {
+                    return (
+                      <span key={pageNum} className="px-1 py-1 text-gray-500">
+                        ...
+                      </span>
+                    );
+                  }
+                  
+                  return null;
+                })}
+                
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={!hasNextPage}
+                  className={`px-3 py-1 rounded-md text-sm ${
+                    hasNextPage 
+                      ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Sonraki
+                </button>
+              </div>
             </div>
           )}
         </div>
