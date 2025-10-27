@@ -44,9 +44,10 @@ export default function TraderDetail({
   const [pdfStartDate, setPdfStartDate] = useState<string>('');
   const [pdfEndDate, setPdfEndDate] = useState<string>('');
   const [showMobileActions, setShowMobileActions] = useState(false);
-  const [transactionFilter, setTransactionFilter] = useState<string>('all'); // New filter state
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false); // For mobile filter dropdown
-  
+  const [transactionFilter, setTransactionFilter] = useState<string>('all');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [balanceDate, setBalanceDate] = useState<string>(''); // New state for balance date filter
+
   const traderTransactions = allTransactions
     .filter(t => t.traderId === trader.id)
     .filter(t => transactionFilter === 'all' || t.type === transactionFilter) // Apply filter
@@ -78,8 +79,103 @@ export default function TraderDetail({
     hasPrevPage
   } = usePaginatedData(traderTransactions, isMobile ? 10 : 20); // Back to original page size
 
-  const { moneyBalance, productBalances } = calculateBalances(trader, allTransactions);
+  // Calculate product balances up to a specific date
+  const calculateBalancesUpToDate = (targetDate?: string) => {
+    let filteredTransactions = allTransactions.filter(t => t.traderId === trader.id);
+    
+    // If a date is specified, filter transactions up to that date
+    if (targetDate) {
+      const targetDateTime = new Date(targetDate).getTime();
+      filteredTransactions = filteredTransactions.filter(t => {
+        const transactionDate = new Date(t.date).getTime();
+        return transactionDate <= targetDateTime;
+      });
+    }
+    
+    // Calculate balances using the same logic as in calculations.ts
+    let moneyBalance = 0;
+    const productBalances: Record<string, number> = {};
+
+    filteredTransactions.forEach(transaction => {
+      switch (transaction.type) {
+        case 'mal_alimi':
+          moneyBalance -= transaction.amount;
+          if (transaction.productType && transaction.quantity) {
+            productBalances[transaction.productType] = 
+              (productBalances[transaction.productType] || 0) + transaction.quantity;
+          }
+          break;
+        case 'mal_satisi':
+          moneyBalance += transaction.amount;
+          if (transaction.productType && transaction.quantity) {
+            productBalances[transaction.productType] = 
+              (productBalances[transaction.productType] || 0) - transaction.quantity;
+          }
+          break;
+        case 'odeme_yapildi':
+          moneyBalance += transaction.amount;
+          break;
+        case 'tahsilat':
+          moneyBalance -= transaction.amount;
+          break;
+        case 'nakit_borc':
+          moneyBalance += transaction.amount;
+          break;
+        case 'nakit_tahsilat':
+          moneyBalance -= transaction.amount;
+          break;
+        case 'urun_ile_odeme_yapildi':
+          moneyBalance += transaction.amount;
+          if (transaction.productType && transaction.quantity) {
+            productBalances[transaction.productType] = 
+              (productBalances[transaction.productType] || 0) + transaction.quantity;
+          }
+          break;
+        case 'urun_ile_odeme_alindi':
+          moneyBalance -= transaction.amount;
+          if (transaction.productType && transaction.quantity) {
+            productBalances[transaction.productType] = 
+              (productBalances[transaction.productType] || 0) - transaction.quantity;
+          }
+          break;
+        case 'urun_ile_borc_verme':
+          moneyBalance += transaction.amount;
+          if (transaction.productType && transaction.quantity) {
+            productBalances[transaction.productType] = 
+              (productBalances[transaction.productType] || 0) + transaction.quantity;
+          }
+          break;
+        case 'urun_ile_borc_alma':
+          moneyBalance -= transaction.amount;
+          if (transaction.productType && transaction.quantity) {
+            productBalances[transaction.productType] = 
+              (productBalances[transaction.productType] || 0) - transaction.quantity;
+          }
+          break;
+      }
+    });
+
+    // Apply precision rounding
+    const roundedProductBalances: Record<string, number> = {};
+    Object.keys(productBalances).forEach(productType => {
+      roundedProductBalances[productType] = Math.round((productBalances[productType] + Number.EPSILON) * 1000) / 1000;
+    });
+
+    return {
+      moneyBalance: Math.round((moneyBalance + Number.EPSILON) * 100) / 100,
+      productBalances: roundedProductBalances
+    };
+  };
+
+  // Get current balances (all transactions)
+  const { moneyBalance, productBalances } = calculateBalancesUpToDate();
   
+  // Get balances for the selected date
+  const historicalBalances = balanceDate ? calculateBalancesUpToDate(balanceDate) : null;
+
+  // Use historical balances if a date is selected, otherwise use current balances
+  const displayBalances = historicalBalances || { moneyBalance, productBalances };
+
   const productTypeMap = productTypes.reduce((acc, pt) => {
     acc[pt.id] = pt;
     return acc;
@@ -257,28 +353,68 @@ export default function TraderDetail({
         {/* Bakiye Bilgileri */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Para Bakiyesi */}
-          <div className={`p-4 rounded-lg`} style={{ backgroundColor: moneyBalance >= 0 ? currentTheme.positiveLight : currentTheme.negativeLight }}>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Para Bakiyesi</h3>
-            <div className={`text-2xl font-bold`} style={{ color: moneyBalance >= 0 ? currentTheme.positive : currentTheme.negative }}>
-              {moneyBalance >= 0 ? '+' : ''}
-              {formatMoney(moneyBalance)}
-            </div>
-            <div className="text-sm text-gray-500 mt-1">
-              {moneyBalance >= 0 ? 'Alacak' : 'Borç'}
+          <div className={`p-4 rounded-lg`} style={{ backgroundColor: displayBalances.moneyBalance >= 0 ? currentTheme.positiveLight : currentTheme.negativeLight }}>
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Para Bakiyesi</h3>
+                <div className={`text-2xl font-bold`} style={{ color: displayBalances.moneyBalance >= 0 ? currentTheme.positive : currentTheme.negative }}>
+                  {displayBalances.moneyBalance >= 0 ? '+' : ''}
+                  {formatMoney(displayBalances.moneyBalance)}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">
+                  {displayBalances.moneyBalance >= 0 ? 'Alacak' : 'Borç'}
+                </div>
+              </div>
+              {historicalBalances && (
+                <div className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                  {new Date(balanceDate).toLocaleDateString('tr-TR')}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Ürün Bakiyeleri */}
           <div className="p-4 rounded-lg bg-gray-50">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Ürün Bakiyeleri</h3>
-            {Object.entries(productBalances).some(([, balance]) => balance !== 0) ? (
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="text-sm font-medium text-gray-700">Ürün Bakiyeleri</h3>
+              {historicalBalances && (
+                <div className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                  {new Date(balanceDate).toLocaleDateString('tr-TR')}
+                </div>
+              )}
+            </div>
+            
+            {/* Date filter for balances */}
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Tarihe Göre Görüntüle
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  type="date"
+                  value={balanceDate}
+                  onChange={(e) => setBalanceDate(e.target.value)}
+                  className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                {balanceDate && (
+                  <button
+                    onClick={() => setBalanceDate('')}
+                    className="px-2 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  >
+                    Temizle
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {Object.entries(displayBalances.productBalances).some(([, balance]) => balance !== 0) ? (
               <div className="space-y-3">
                 {/* Alacaklar */}
-                {Object.entries(productBalances).some(([, balance]) => balance > 0) && (
+                {Object.entries(displayBalances.productBalances).some(([, balance]) => balance > 0) && (
                   <div>
                     <h4 className="text-xs font-medium mb-1" style={{ color: currentTheme.positive }}>Toptancıdan Alacaklarım</h4>
                     <div className="space-y-1">
-                      {Object.entries(productBalances).map(([productId, balance]) => {
+                      {Object.entries(displayBalances.productBalances).map(([productId, balance]) => {
                         if (balance <= 0) return null;
                         const product = productTypeMap[productId];
                         if (!product) return null;
@@ -297,11 +433,11 @@ export default function TraderDetail({
                 )}
                 
                 {/* Borçlar */}
-                {Object.entries(productBalances).some(([, balance]) => balance < 0) && (
+                {Object.entries(displayBalances.productBalances).some(([, balance]) => balance < 0) && (
                   <div>
                     <h4 className="text-xs font-medium mb-1" style={{ color: currentTheme.negative }}>Toptancıya Olan Borçlarım</h4>
                     <div className="space-y-1">
-                      {Object.entries(productBalances).map(([productId, balance]) => {
+                      {Object.entries(displayBalances.productBalances).map(([productId, balance]) => {
                         if (balance >= 0) return null;
                         const product = productTypeMap[productId];
                         if (!product) return null;
