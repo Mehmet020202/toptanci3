@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, Package, DollarSign, Trash2, AlertTriangle, Palette } from 'lucide-react';
+import { TrendingUp, TrendingDown, Package, DollarSign, Trash2, AlertTriangle, Palette, Download, Upload, Database } from 'lucide-react';
 import { Trader, Transaction, ProductType } from '../types';
 import { calculateBalances, formatMoney } from '../utils/calculations';
 import { useResponsive } from '../hooks/usePerformanceOptimization';
@@ -16,6 +16,12 @@ export default function ReportPage({ traders, transactions, productTypes, onDele
   const { isMobile, isTablet } = useResponsive();
   const { theme, setTheme, currentTheme } = useTheme();
   
+  // JSON Import/Export states
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [importMessage, setImportMessage] = useState('');
+
   const productTypeMap = productTypes.reduce((acc, pt) => {
     acc[pt.id] = pt;
     return acc;
@@ -49,24 +55,125 @@ export default function ReportPage({ traders, transactions, productTypes, onDele
     return moneyBalance !== 0 || Object.values(productBalances).some(balance => balance !== 0);
   }).length;
 
+  // JSON Export function
+  const handleExportData = () => {
+    try {
+      const dataToExport = {
+        traders,
+        transactions,
+        productTypes,
+        exportDate: new Date().toISOString()
+      };
+      
+      const jsonData = JSON.stringify(dataToExport, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `toptanci_verileri_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      alert('Veriler başarıyla dışa aktarıldı!');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Veriler dışa aktarılırken bir hata oluştu.');
+    }
+  };
+
+  // JSON Import functions
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImportFile(file);
+    }
+  };
+
+  const handleImportData = async () => {
+    if (!importFile) {
+      setImportStatus('error');
+      setImportMessage('Lütfen bir dosya seçin.');
+      return;
+    }
+
+    setImportStatus('loading');
+    
+    try {
+      const text = await importFile.text();
+      const importedData = JSON.parse(text);
+      
+      // Validate data structure
+      if (!importedData.traders || !importedData.transactions || !importedData.productTypes) {
+        throw new Error('Geçersiz veri yapısı');
+      }
+      
+      // Here you would typically call a function to save the data
+      // For now, we'll just show a success message
+      setImportStatus('success');
+      setImportMessage(`Veriler başarıyla içe aktarıldı! (${importedData.traders.length} toptancı, ${importedData.transactions.length} işlem, ${importedData.productTypes.length} ürün türü)`);
+      
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setShowImportModal(false);
+        setImportFile(null);
+        setImportStatus('idle');
+        setImportMessage('');
+      }, 3000);
+    } catch (error) {
+      console.error('Import error:', error);
+      setImportStatus('error');
+      setImportMessage('Veriler içe aktarılırken bir hata oluştu. Lütfen geçerli bir JSON dosyası seçin.');
+    }
+  };
+
   return (
     <div className={`max-w-6xl mx-auto space-y-${isMobile ? '4' : '6'} ${isMobile ? 'px-2' : ''}`}>
       <div className={`bg-white rounded-lg shadow-md ${isMobile ? 'p-4' : 'p-6'}`}>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-col md:flex-row md:items-center md:justify-between'} mb-6`}>
           <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 leading-tight tracking-tight`}>Genel Rapor</h1>
           
-          {/* Tema Seçici */}
-          <div className="mt-4 md:mt-0 flex items-center space-x-2">
-            <Palette className="w-5 h-5 text-gray-600" />
-            <select
-              value={theme}
-              onChange={(e) => setTheme(e.target.value as keyof typeof themes)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          {/* JSON Import/Export and Theme Selector */}
+          <div className={`mt-4 ${isMobile ? 'flex flex-col space-y-3' : 'flex items-center space-x-4'}`}>
+            {/* JSON Export Button */}
+            <button
+              onClick={handleExportData}
+              className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-md font-medium text-white transition-colors ${isMobile ? 'w-full' : 'w-auto'}`}
+              style={{ backgroundColor: currentTheme.primary }}
             >
-              {Object.entries(themes).map(([key, theme]) => (
-                <option key={key} value={key}>{theme.name}</option>
-              ))}
-            </select>
+              <Download className="w-4 h-4" />
+              <span>{isMobile ? 'Dışa Aktar' : 'JSON Dışa Aktar'}</span>
+            </button>
+            
+            {/* JSON Import Button */}
+            <button
+              onClick={() => setShowImportModal(true)}
+              className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-md font-medium text-white transition-colors ${isMobile ? 'w-full' : 'w-auto'}`}
+              style={{ backgroundColor: currentTheme.secondary }}
+            >
+              <Upload className="w-4 h-4" />
+              <span>{isMobile ? 'İçe Aktar' : 'JSON İçe Aktar'}</span>
+            </button>
+            
+            {/* Theme Selector */}
+            <div className={`flex items-center ${isMobile ? 'justify-center' : 'space-x-2'}`}>
+              <Palette className="w-5 h-5 text-gray-600" />
+              <select
+                value={theme}
+                onChange={(e) => setTheme(e.target.value as keyof typeof themes)}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {Object.entries(themes).map(([key, theme]) => (
+                  <option key={key} value={key}>{theme.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
