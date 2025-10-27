@@ -93,18 +93,19 @@ export default function TransactionForm({
     }
   }, [productType, quantity, unitPrice, needsProduct, needsUnitPrice, needsCalculatedAmount]);
 
+  // Improved effect for setting default unit price
   useEffect(() => {
     if (productType && productTypes.length > 0 && needsUnitPrice) {
       const product = productTypes.find(pt => pt.id === productType);
       if (product) {
-        // Sadece düzenleme modunda değilsek ve birim fiyat hiç girilmemişse varsayılan fiyatı göster
-        // Ancak kullanıcı manuel olarak yazmalı
+        // Only set default unit price if it's a new transaction and unit price is empty
         if (!transaction && (!unitPrice || unitPrice === '')) {
           setUnitPrice(product.currentPrice.toString());
         }
+        // For existing transactions, keep the existing unit price
       }
     }
-  }, [productType, productTypes, needsUnitPrice, transaction, unitPrice]);
+  }, [productType, productTypes, needsUnitPrice, transaction]); // Removed unitPrice from dependencies to prevent overriding user input
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -319,9 +320,8 @@ export default function TransactionForm({
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Otomatik hesaplanacak"
-                readOnly={!!(quantity && needsUnitPrice && unitPrice)}
               />
             </div>
           )}
