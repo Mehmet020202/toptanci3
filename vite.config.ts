@@ -4,8 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/toptanci3/', // GitHub Pages için gerekli olan ana dizin ayarı
   plugins: [
-    react(),
+    react( ),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
@@ -32,19 +33,19 @@ export default defineConfig({
         theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',
-        scope: '/',
-        start_url: '/',
+        scope: '/toptanci3/', // Alt dizine uygun hale getirildi
+        start_url: '/toptanci3/', // Alt dizine uygun hale getirildi
         orientation: 'portrait-primary',
         lang: 'tr',
         icons: [
           {
-            src: '/icon-192x192.png',
+            src: 'icon-192x192.png', // Baştaki / kaldırıldı (relative path )
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/icon-512x512.png',
+            src: 'icon-512x512.png', // Baştaki / kaldırıldı (relative path)
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
